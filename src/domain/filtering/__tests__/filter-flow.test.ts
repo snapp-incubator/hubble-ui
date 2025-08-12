@@ -1,4 +1,9 @@
-import { Filters, filterFlow, filterFlowByEntry, FilterEntry } from '~/domain/filtering';
+import {
+  Filters,
+  filterFlow,
+  filterFlowByEntry,
+  FilterEntry,
+} from '~/domain/filtering';
 
 import { Dictionary } from '~/domain/misc';
 import { Verdict } from '~/domain/hubble';
@@ -33,16 +38,16 @@ describe('filterFlow', () => {
   const flowHttp200 = new Flow(flows.hubbleWithHttp200);
   const fromGoogleFlow = new Flow(flows.flowFromGoogle);
   const toGoogleFlow = new Flow(flows.flowToGoogle);
-  const eitherGoogleFlow = new Flow(flows.flowFromToGoogle);
+  const bothGoogleFlow = new Flow(flows.flowFromToGoogle);
   const sameIpsFlow = new Flow(flows.sameIps);
   const sameV6IpsFlow = new Flow(flows.sameV6Ips);
   const differentIpsFlow = new Flow(flows.differentIps);
   const toKubeDNSFlow = new Flow(flows.toKubeDNS);
   const fromKubeDNSFlow = new Flow(flows.fromKubeDNS);
-  const eitherKubeDNSFlow = new Flow(flows.fromToKubeDNS);
+  const bothKubeDNSFlow = new Flow(flows.fromToKubeDNS);
   const toHostFlow = new Flow(flows.toHost);
   const fromHostFlow = new Flow(flows.fromHost);
-  const eitherHostFlow = new Flow(flows.fromToHost);
+  const bothHostFlow = new Flow(flows.fromToHost);
 
   const [senderPod, receiverPod] = ['sender-pod-12345', 'receiver-pod-54321'];
   let temp = thelpers.flowsBetweenPods(senderPod, receiverPod);
@@ -60,7 +65,7 @@ describe('filterFlow', () => {
     expect(stay).toBe(true);
   });
 
-  test(`namespace > doesn't match with source and destination`, () => {
+  test('namespace > doesnt match with source and destination', () => {
     const filters: Filters = Filters.fromObject({
       namespace: 'random-123987-ns',
     });
@@ -89,25 +94,25 @@ describe('filterFlow', () => {
 
   test('verdict > matches (Forwarded)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Forwarded]),
+      verdict: Verdict.Forwarded,
     });
 
     const stay = filterFlow(diffNsFlow, filters);
     expect(stay).toBe(true);
   });
 
-  test(`verdict > doesn't match (Forwarded vs Dropped)`, () => {
+  test('verdict > doesnt match (Forwarded vs Dropped)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Dropped]),
+      verdict: Verdict.Dropped,
     });
 
     const stay = filterFlow(diffNsFlow, filters);
     expect(stay).toBe(false);
   });
 
-  test(`verdict > doesn't match (Forwarded vs Unknown)`, () => {
+  test('verdict > doesnt match (Forwarded vs Unknown)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Unknown]),
+      verdict: Verdict.Unknown,
     });
 
     const stay = filterFlow(diffNsFlow, filters);
@@ -116,25 +121,25 @@ describe('filterFlow', () => {
 
   test('verdict > matches (Dropped)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Dropped]),
+      verdict: Verdict.Dropped,
     });
 
     const stay = filterFlow(verdictDropped, filters);
     expect(stay).toBe(true);
   });
 
-  test(`verdict > doesn't match (Dropped vs Forwarded)`, () => {
+  test('verdict > doesnt match (Dropped vs Forwarded)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Forwarded]),
+      verdict: Verdict.Forwarded,
     });
 
     const stay = filterFlow(verdictDropped, filters);
     expect(stay).toBe(false);
   });
 
-  test(`verdict > doesn't match (Dropped vs Unknown)`, () => {
+  test('verdict > doesnt match (Dropped vs Unknown)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Unknown]),
+      verdict: Verdict.Unknown,
     });
 
     const stay = filterFlow(verdictDropped, filters);
@@ -143,25 +148,25 @@ describe('filterFlow', () => {
 
   test('verdict > matches (Unknown)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Unknown]),
+      verdict: Verdict.Unknown,
     });
 
     const stay = filterFlow(verdictUnknown, filters);
     expect(stay).toBe(true);
   });
 
-  test(`verdict > doesn't match (Unknown vs Forwarded)`, () => {
+  test('verdict > doesnt match (Unknown vs Forwarded)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Forwarded]),
+      verdict: Verdict.Forwarded,
     });
 
     const stay = filterFlow(verdictUnknown, filters);
     expect(stay).toBe(false);
   });
 
-  test(`verdict > doesn't match (Unknown vs Dropped)`, () => {
+  test('verdict > doesnt match (Unknown vs Dropped)', () => {
     const filters: Filters = Filters.fromObject({
-      verdicts: new Set([Verdict.Dropped]),
+      verdict: Verdict.Dropped,
     });
 
     const stay = filterFlow(verdictUnknown, filters);
@@ -177,7 +182,7 @@ describe('filterFlow', () => {
     expect(stay).toBe(true);
   });
 
-  test(`http status > doesn't match (400)`, () => {
+  test('http status > doesnt match (400)', () => {
     const filters: Filters = Filters.fromObject({
       httpStatus: '400',
     });
@@ -204,7 +209,7 @@ describe('filterFlow', () => {
     expect(stay).toBe(true);
   });
 
-  test(`http status > doesn't match (0)`, () => {
+  test('http status > doesnt match (0)', () => {
     const filters: Filters = Filters.fromObject({
       httpStatus: '0',
     });
@@ -213,7 +218,7 @@ describe('filterFlow', () => {
     expect(stay).toBe(false);
   });
 
-  test(`http status > doesn't match (l7 not presented)`, () => {
+  test('http status > doesnt match (l7 not presented)', () => {
     const filters: Filters = Filters.fromObject({
       httpStatus: '200',
     });
@@ -232,8 +237,8 @@ describe('filterFlow', () => {
     expect(fromKubeDNSFlow.sourceLabelProps.isKubeDNS).toBe(true);
     expect(fromKubeDNSFlow.destinationLabelProps.isKubeDNS).toBe(false);
 
-    expect(eitherKubeDNSFlow.sourceLabelProps.isKubeDNS).toBe(true);
-    expect(eitherKubeDNSFlow.destinationLabelProps.isKubeDNS).toBe(true);
+    expect(bothKubeDNSFlow.sourceLabelProps.isKubeDNS).toBe(true);
+    expect(bothKubeDNSFlow.destinationLabelProps.isKubeDNS).toBe(true);
   });
 
   // All filters on skip KubeDNS / skip host preserve target flow since
@@ -298,7 +303,7 @@ describe('filterFlow', () => {
       skipKubeDns: true,
     });
 
-    const stay = filterFlow(eitherKubeDNSFlow, filters);
+    const stay = filterFlow(bothKubeDNSFlow, filters);
     expect(stay).toBe(true);
   });
 
@@ -307,7 +312,7 @@ describe('filterFlow', () => {
       skipKubeDns: false,
     });
 
-    const stay = filterFlow(eitherKubeDNSFlow, filters);
+    const stay = filterFlow(bothKubeDNSFlow, filters);
     expect(stay).toBe(true);
   });
 
@@ -321,8 +326,8 @@ describe('filterFlow', () => {
     expect(fromHostFlow.sourceLabelProps.isHost).toBe(true);
     expect(fromHostFlow.destinationLabelProps.isHost).toBe(false);
 
-    expect(eitherHostFlow.sourceLabelProps.isHost).toBe(true);
-    expect(eitherHostFlow.destinationLabelProps.isHost).toBe(true);
+    expect(bothHostFlow.sourceLabelProps.isHost).toBe(true);
+    expect(bothHostFlow.destinationLabelProps.isHost).toBe(true);
   });
 
   test('skip host > flow not skipped 1', () => {
@@ -384,7 +389,7 @@ describe('filterFlow', () => {
       skipHost: true,
     });
 
-    const stay = filterFlow(eitherHostFlow, filters);
+    const stay = filterFlow(bothHostFlow, filters);
     expect(stay).toBe(false);
   });
 
@@ -393,12 +398,13 @@ describe('filterFlow', () => {
       skipHost: false,
     });
 
-    const stay = filterFlow(eitherHostFlow, filters);
+    const stay = filterFlow(bothHostFlow, filters);
     expect(stay).toBe(true);
   });
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `labels > from matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `labels > from matches ${tnum} (${flowName})`,
     FilterEntry.parse(`from:label=namespace=SenderNs`)!,
     true,
     {
@@ -411,26 +417,28 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `labels > from doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `labels > from doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`from:label=namespace=SenderNs`)!,
     false,
     {
       sameNsFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `labels > to matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `labels > to matches ${tnum} (${flowName})`,
     FilterEntry.parse(`to:label=namespace=ReceiverNs`)!,
     true,
     {
@@ -442,28 +450,30 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       fromKubeDNSFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `labels > to doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `labels > to doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`to:label=namespace=SenderNs`)!,
     false,
     {
       sameNsFlow,
       toKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `labels > either matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:label=namespace=SenderNs`)!,
+    (flowName: string, tnum: number) =>
+      `labels > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:label=namespace=SenderNs`)!,
     true,
     {
       diffNsFlow,
@@ -474,14 +484,15 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `labels > either doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:label=namespace=random-123987-ns`)!,
+    (flowName: string, tnum: number) =>
+      `labels > both doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:label=namespace=random-123987-ns`)!,
     false,
     {
       diffNsFlow,
@@ -492,28 +503,30 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `dns > from matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `dns > from matches ${tnum} (${flowName})`,
     FilterEntry.parse(`from:dns=www.google.com`)!,
     true,
     {
       fromGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `dns > from doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `dns > from doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`from:dns=www.google.com`)!,
     false,
     {
@@ -526,25 +539,27 @@ describe('filterFlow', () => {
       toGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `dns > to matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `dns > to matches ${tnum} (${flowName})`,
     FilterEntry.parse(`to:dns=www.google.com`)!,
     true,
     {
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `dns > to doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `dns > to doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`to:dns=www.google.com`)!,
     false,
     {
@@ -557,27 +572,29 @@ describe('filterFlow', () => {
       fromGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `dns > either matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:dns=www.google.com`)!,
+    (flowName: string, tnum: number) =>
+      `dns > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:dns=www.google.com`)!,
     true,
     {
       toGoogleFlow,
       fromGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `dns > either doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:dns=www.google.com`)!,
+    (flowName: string, tnum: number) =>
+      `dns > both doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:dns=www.google.com`)!,
     false,
     {
       diffNsFlow,
@@ -588,15 +605,16 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `ip > from matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `ip > from matches ${tnum} (${flowName})`,
     FilterEntry.parse(`from:ip=${sameIpsFlow.sourceIp}`)!,
     true,
     {
@@ -606,7 +624,8 @@ describe('filterFlow', () => {
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `ip > from doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `ip > from doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`from:ip=0.0.0.0`)!,
     false,
     {
@@ -618,13 +637,13 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
@@ -638,7 +657,8 @@ describe('filterFlow', () => {
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `ip > to doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `ip > to doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`to:ip=${differentIpsFlow.destinationIp}`)!,
     false,
     {
@@ -649,19 +669,20 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `ip > either matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:ip=${differentIpsFlow.sourceIp}`)!,
+    (flowName: string, tnum: number) =>
+      `ip > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:ip=${differentIpsFlow.sourceIp}`)!,
     true,
     {
       differentIpsFlow,
@@ -670,8 +691,9 @@ describe('filterFlow', () => {
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `ip > either doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:ip=0.0.0.0`)!,
+    (flowName: string, tnum: number) =>
+      `ip > both doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:ip=0.0.0.0`)!,
     false,
     {
       sameIpsFlow,
@@ -682,18 +704,19 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > from matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `identity > from matches ${tnum} (${flowName})`,
     FilterEntry.parse(`from:identity=0`)!,
     true,
     {
@@ -706,18 +729,19 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > from doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `identity > from doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`from:identity=1`)!,
     false,
     {
@@ -730,18 +754,19 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > to matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `identity > to matches ${tnum} (${flowName})`,
     FilterEntry.parse(`to:identity=1`)!,
     true,
     {
@@ -754,18 +779,19 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > to doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `identity > to doesnt match ${tnum} (${flowName})`,
     FilterEntry.parse(`to:identity=0`)!,
     false,
     {
@@ -778,19 +804,20 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > either matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:identity=0`)!,
+    (flowName: string, tnum: number) =>
+      `identity > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:identity=0`)!,
     true,
     {
       normalOne: flows.normalOne,
@@ -802,19 +829,20 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > either matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:identity=1`)!,
+    (flowName: string, tnum: number) =>
+      `identity > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:identity=1`)!,
     true,
     {
       normalOne: flows.normalOne,
@@ -826,19 +854,20 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `identity > either doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`either:identity=100500`)!,
+    (flowName: string, tnum: number) =>
+      `identity > both doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:identity=100500`)!,
     false,
     {
       normalOne: flows.normalOne,
@@ -850,13 +879,13 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
@@ -874,7 +903,7 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > from sender pod doesn't match ${flowName} ${tnum}`;
+      return `pod > from sender pod doesnt match ${flowName} ${tnum}`;
     },
     FilterEntry.parse(`from:pod=${senderPod}`)!,
     false,
@@ -897,7 +926,7 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > to sender pod doesn't match ${flowName} ${tnum}`;
+      return `pod > to sender pod doesnt match ${flowName} ${tnum}`;
     },
     FilterEntry.parse(`to:pod=${senderPod}`)!,
     false,
@@ -908,9 +937,9 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > either sender pod matches ${flowName} ${tnum}`;
+      return `pod > both sender pod matches ${flowName} ${tnum}`;
     },
-    FilterEntry.parse(`either:pod=${senderPod}`)!,
+    FilterEntry.parse(`both:pod=${senderPod}`)!,
     true,
     {
       fromSenderToReceiverPod,
@@ -933,7 +962,7 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > from receiver pod doesn't match ${flowName} ${tnum}`;
+      return `pod > from receiver pod doesnt match ${flowName} ${tnum}`;
     },
     FilterEntry.parse(`from:pod=${receiverPod}`)!,
     false,
@@ -956,7 +985,7 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > to receiver pod doesn't match ${flowName} ${tnum}`;
+      return `pod > to receiver pod doesnt match ${flowName} ${tnum}`;
     },
     FilterEntry.parse(`to:pod=${receiverPod}`)!,
     false,
@@ -968,9 +997,9 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > either receiver pod matches ${flowName} ${tnum}`;
+      return `pod > both receiver pod matches ${flowName} ${tnum}`;
     },
-    FilterEntry.parse(`either:pod=${receiverPod}`)!,
+    FilterEntry.parse(`both:pod=${receiverPod}`)!,
     true,
     {
       fromSenderToReceiverPod,
@@ -980,9 +1009,9 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `pod > either receiver pod matches ${flowName} ${tnum}`;
+      return `pod > both receiver pod matches ${flowName} ${tnum}`;
     },
-    FilterEntry.parse(`either:pod=${receiverPod}`)!,
+    FilterEntry.parse(`both:pod=${receiverPod}`)!,
     false,
     {
       fromSenderToSenderPod,
@@ -990,7 +1019,8 @@ describe('filterFlow', () => {
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `negative > from label matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `negative > from label matches ${tnum} (${flowName})`,
     FilterEntry.parse(`!from:label=namespace=SenderNs`)!,
     false,
     {
@@ -1003,83 +1033,87 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
-    },
-  );
-
-  testFilterEntry(
-    (flowName: string, tnum: number) => `negative > from label doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`!from:label=namespace=SenderNs`)!,
-    true,
-    {
-      sameNsFlow,
-      fromKubeDNSFlow,
-      eitherKubeDNSFlow,
-      fromHostFlow,
-      eitherHostFlow,
-    },
-  );
-
-  testFilterEntry(
-    (flowName: string, tnum: number) => `negative > either dns matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`!either:dns=www.google.com`)!,
-    false,
-    {
-      toGoogleFlow,
-      fromGoogleFlow,
-      eitherGoogleFlow,
-    },
-  );
-
-  testFilterEntry(
-    (flowName: string, tnum: number) => `negative > either dns doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`!either:dns=www.google.com`)!,
-    true,
-    {
-      diffNsFlow,
-      differentIpsFlow,
-      verdictDropped,
-      verdictUnknown,
-      sameIpsFlow,
-      sameV6IpsFlow,
-      toKubeDNSFlow,
-      fromKubeDNSFlow,
-      eitherKubeDNSFlow,
-      fromHostFlow,
-      toHostFlow,
-      eitherHostFlow,
-    },
-  );
-
-  testFilterEntry(
-    (flowName: string, tnum: number) => `negative > either identity matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`!either:identity=1`)!,
-    false,
-    {
-      normalOne: flows.normalOne,
-      differentIpsFlow,
-      sameIpsFlow,
-      diffNsFlow,
-      verdictDropped,
-      verdictUnknown,
-      sameV6IpsFlow,
-      fromGoogleFlow,
-      toGoogleFlow,
-      eitherGoogleFlow,
-      toKubeDNSFlow,
-      fromKubeDNSFlow,
-      eitherKubeDNSFlow,
-      fromHostFlow,
-      toHostFlow,
-      eitherHostFlow,
     },
   );
 
   testFilterEntry(
     (flowName: string, tnum: number) =>
-      `negative > either identity doesn't match ${tnum} (${flowName})`,
-    FilterEntry.parse(`!either:identity=100500`)!,
+      `negative > from label doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`!from:label=namespace=SenderNs`)!,
+    true,
+    {
+      sameNsFlow,
+      fromKubeDNSFlow,
+      bothKubeDNSFlow,
+      fromHostFlow,
+      bothHostFlow,
+    },
+  );
+
+  testFilterEntry(
+    (flowName: string, tnum: number) =>
+      `negative > both dns matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:dns=www.google.com`)!,
+    false,
+    {
+      toGoogleFlow,
+      fromGoogleFlow,
+      bothGoogleFlow,
+    },
+  );
+
+  testFilterEntry(
+    (flowName: string, tnum: number) =>
+      `negative > both dns doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:dns=www.google.com`)!,
+    true,
+    {
+      diffNsFlow,
+      differentIpsFlow,
+      verdictDropped,
+      verdictUnknown,
+      sameIpsFlow,
+      sameV6IpsFlow,
+      toKubeDNSFlow,
+      fromKubeDNSFlow,
+      bothKubeDNSFlow,
+      fromHostFlow,
+      toHostFlow,
+      bothHostFlow,
+    },
+  );
+
+  testFilterEntry(
+    (flowName: string, tnum: number) =>
+      `negative > both identity matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:identity=1`)!,
+    false,
+    {
+      normalOne: flows.normalOne,
+      differentIpsFlow,
+      sameIpsFlow,
+      diffNsFlow,
+      verdictDropped,
+      verdictUnknown,
+      sameV6IpsFlow,
+      fromGoogleFlow,
+      toGoogleFlow,
+      bothGoogleFlow,
+      toKubeDNSFlow,
+      fromKubeDNSFlow,
+      bothKubeDNSFlow,
+      fromHostFlow,
+      toHostFlow,
+      bothHostFlow,
+    },
+  );
+
+  testFilterEntry(
+    (flowName: string, tnum: number) =>
+      `negative > both identity doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:identity=100500`)!,
     true,
     {
       normalOne: flows.normalOne,
@@ -1091,18 +1125,19 @@ describe('filterFlow', () => {
       sameV6IpsFlow,
       fromGoogleFlow,
       toGoogleFlow,
-      eitherGoogleFlow,
+      bothGoogleFlow,
       toKubeDNSFlow,
       fromKubeDNSFlow,
-      eitherKubeDNSFlow,
+      bothKubeDNSFlow,
       fromHostFlow,
       toHostFlow,
-      eitherHostFlow,
+      bothHostFlow,
     },
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `negative > from ip matches ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `negative > from ip matches ${tnum} (${flowName})`,
     FilterEntry.parse(`!from:ip=${differentIpsFlow.sourceIp}`)!,
     false,
     {
@@ -1112,7 +1147,8 @@ describe('filterFlow', () => {
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `negative > from ip doesn't match ${tnum} (${flowName})`,
+    (flowName: string, tnum: number) =>
+      `negative > from ip doesnt matches ${tnum} (${flowName})`,
     FilterEntry.parse(`!from:ip=${differentIpsFlow.destinationIp}`)!,
     true,
     {
@@ -1122,8 +1158,9 @@ describe('filterFlow', () => {
   );
 
   testFilterEntry(
-    (flowName: string, tnum: number) => `negative > either ip matches ${tnum} (${flowName})`,
-    FilterEntry.parse(`!either:ip=${differentIpsFlow.sourceIp}`)!,
+    (flowName: string, tnum: number) =>
+      `negative > both ip matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:ip=${differentIpsFlow.sourceIp}`)!,
     false,
     {
       differentIpsFlow,
@@ -1133,9 +1170,9 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `negative > either receiver pod matches ${flowName} ${tnum}`;
+      return `negative > both receiver pod matches ${flowName} ${tnum}`;
     },
-    FilterEntry.parse(`!either:pod=${receiverPod}`)!,
+    FilterEntry.parse(`!both:pod=${receiverPod}`)!,
     false,
     {
       fromSenderToReceiverPod,
@@ -1145,84 +1182,72 @@ describe('filterFlow', () => {
 
   testFilterEntry(
     (flowName: string, tnum: number) => {
-      return `negative > either receiver pod matches ${flowName} ${tnum}`;
+      return `negative > both receiver pod matches ${flowName} ${tnum}`;
     },
-    FilterEntry.parse(`!either:pod=${receiverPod}`)!,
+    FilterEntry.parse(`!both:pod=${receiverPod}`)!,
     true,
     {
       fromSenderToSenderPod,
     },
   );
-
+  // Port filtering tests
   testFilterEntry(
-    () => `workload > to workload matches`,
-    FilterEntry.parse(`to:workload=svc:receiver`)!,
+    (flowName: string, tnum: number) =>
+      `port > to matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`to:port=80`)!,
     true,
     {
-      diffNsFlow,
+      normalOne: flows.normalOne, // This flow has destination port 80
     },
   );
 
   testFilterEntry(
-    () => `workload > to workload doesn't match`,
-    FilterEntry.parse(`to:workload=svc:receiver`)!,
-    false,
-    {
-      fromSenderToReceiverPod,
-    },
-  );
-
-  testFilterEntry(
-    () => `workload > to workload doesn't match`,
-    FilterEntry.parse(`to:workload=svc:sender`)!,
-    false,
-    {
-      diffNsFlow,
-    },
-  );
-
-  testFilterEntry(
-    () => `workload > from workload matches`,
-    FilterEntry.parse(`from:workload=svc:sender`)!,
+    (flowName: string, tnum: number) =>
+      `port > from matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`from:port=56789`)!,
     true,
     {
-      diffNsFlow,
+      normalOne: flows.normalOne, // This flow has source port 56789
     },
   );
 
   testFilterEntry(
-    () => `workload > from workload doesn't match`,
-    FilterEntry.parse(`from:workload=svc:receiver`)!,
-    false,
-    {
-      diffNsFlow,
-    },
-  );
-
-  testFilterEntry(
-    () => `workload > either workload matches with receiver`,
-    FilterEntry.parse(`either:workload=svc:receiver`)!,
+    (flowName: string, tnum: number) =>
+      `port > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:port=80`)!,
     true,
     {
-      diffNsFlow,
+      normalOne: flows.normalOne, // This flow has destination port 80
     },
   );
 
   testFilterEntry(
-    () => `workload > either workload matches with sender`,
-    FilterEntry.parse(`either:workload=svc:sender`)!,
-    true,
-    {
-      diffNsFlow,
-    },
-  );
-
-  testFilterEntry(
-    () => `workload > either workload doesn't match`,
-    FilterEntry.parse(`either:workload=svc:unknown`)!,
+    (flowName: string, tnum: number) =>
+      `port > both doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`both:port=9999`)!,
     false,
     {
-      diffNsFlow,
+      normalOne: flows.normalOne, // This flow doesn't have port 9999
+    },
+  );
+
+  testFilterEntry(
+    (flowName: string, tnum: number) =>
+      `port > negative > both matches ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:port=9999`)!,
+    true,
+    {
+      normalOne: flows.normalOne, // This flow doesn't have port 9999, so negative filter should match
+    },
+  );
+
+  testFilterEntry(
+    (flowName: string, tnum: number) =>
+      `port > negative > both doesnt match ${tnum} (${flowName})`,
+    FilterEntry.parse(`!both:port=80`)!,
+    false,
+    {
+      normalOne: flows.normalOne, // This flow has port 80, so negative filter should not match
     },
   );
 });

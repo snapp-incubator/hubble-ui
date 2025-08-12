@@ -12,8 +12,8 @@ export const filterFlow = (flow: Flow, filters: Filters): boolean => {
       return false;
   }
 
-  if ((filters.verdicts?.size ?? 0) > 0) {
-    if (!filters.verdicts?.has(flow.verdict)) return false;
+  if (filters.verdict != null && flow.verdict !== filters.verdict) {
+    return false;
   }
 
   if (!!filters.skipHost) {
@@ -27,6 +27,13 @@ export const filterFlow = (flow: Flow, filters: Filters): boolean => {
     const destIsRemoteNode = flow.destinationLabelProps.isRemoteNode;
 
     if (sourceIsRemoteNode || destIsRemoteNode) return false;
+  }
+
+  if (!!filters.skipKubeApiServer) {
+    const sourceIsKubeApiServer = flow.sourceLabelProps.isKubeApiServer;
+    const destIsKubeApiServer = flow.destinationLabelProps.isKubeApiServer;
+
+    if (sourceIsKubeApiServer || destIsKubeApiServer) return false;
   }
 
   // NOTE: destination port 53 and apporpriate destination label are exactly
@@ -50,7 +57,6 @@ export const filterFlow = (flow: Flow, filters: Filters): boolean => {
     if (rangeSign === '+' && flow.httpStatus < httpStatus) return false;
     if (rangeSign === '-' && flow.httpStatus > httpStatus) return false;
   }
-
   if (!filters.filters?.length) return true;
 
   for (const ff of filters.filters) {
@@ -92,8 +98,9 @@ export const filterFlowByEntry = (flow: Flow, filter: FilterEntry): boolean => {
       break;
     }
     case FilterKind.TCPFlag: {
-      // TODO: Revisit
-      return filter.negative !== flow.hasTCPFlag(filter.query.toLowerCase() as any);
+      return (
+        filter.negative !== flow.hasTCPFlag(filter.query.toLowerCase() as any)
+      );
     }
     case FilterKind.Pod: {
       if (filter.fromRequired) fromOk = flow.senderPodIs(filter.query);
@@ -101,12 +108,9 @@ export const filterFlowByEntry = (flow: Flow, filter: FilterEntry): boolean => {
 
       break;
     }
-    case FilterKind.Workload: {
-      const workload = filter.asWorkload();
-      if (workload == null) break;
-
-      if (filter.fromRequired) fromOk = flow.senderHasWorkload(workload);
-      if (filter.toRequired) toOk = flow.receiverHasWorkload(workload);
+    case FilterKind.Port: {
+      if (filter.fromRequired) fromOk = flow.senderHasPort(filter.query);
+      if (filter.toRequired) toOk = flow.receiverHasPort(filter.query);
 
       break;
     }

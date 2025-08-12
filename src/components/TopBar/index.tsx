@@ -14,6 +14,7 @@ import { NamespaceSelectorDropdown } from './NamespaceSelectorDropdown';
 import { ConnectionIndicator } from './ConnectionIndicator';
 
 import css from './styles.scss';
+import Logout from '~/components/TopBar/Logout';
 
 export interface Props {
   transferState: TransferState;
@@ -73,9 +74,12 @@ export const TopBar = observer(function TopBar(props: Props) {
       </div>
       <div className={css.right}>
         <div className={css.spacer} />
-        <div className={css.spacer} />
 
         <ConnectionIndicator transferState={props.transferState} />
+
+        <div className={css.spacer} />
+
+        <Logout />
       </div>
     </div>
   );

@@ -59,8 +59,11 @@ func NewServerMetricsForTesting(started, succeeded, failed, timestamp int64) *Se
 	return sm
 }
 
+<<<<<<< HEAD
 // CopyFrom copies the metrics data from the provided ServerMetrics
 // instance into the current instance.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (sm *ServerMetrics) CopyFrom(o *ServerMetrics) {
 	sm.CallsStarted.Store(o.CallsStarted.Load())
 	sm.CallsSucceeded.Store(o.CallsSucceeded.Load())

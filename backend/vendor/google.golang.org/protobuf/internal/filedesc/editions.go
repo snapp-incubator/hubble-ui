@@ -32,6 +32,7 @@ func unmarshalGoFeature(b []byte, parent EditionFeatures) EditionFeatures {
 			v, m := protowire.ConsumeVarint(b)
 			b = b[m:]
 			parent.GenerateLegacyUnmarshalJSON = protowire.DecodeBool(v)
+<<<<<<< HEAD
 		case genid.GoFeatures_ApiLevel_field_number:
 			v, m := protowire.ConsumeVarint(b)
 			b = b[m:]
@@ -40,6 +41,8 @@ func unmarshalGoFeature(b []byte, parent EditionFeatures) EditionFeatures {
 			v, m := protowire.ConsumeVarint(b)
 			b = b[m:]
 			parent.StripEnumPrefix = int(v)
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		default:
 			panic(fmt.Sprintf("unkown field number %d while unmarshalling GoFeatures", num))
 		}
@@ -69,9 +72,12 @@ func unmarshalFeatureSet(b []byte, parent EditionFeatures) EditionFeatures {
 				parent.IsDelimitedEncoded = v == genid.FeatureSet_DELIMITED_enum_value
 			case genid.FeatureSet_JsonFormat_field_number:
 				parent.IsJSONCompliant = v == genid.FeatureSet_ALLOW_enum_value
+<<<<<<< HEAD
 			case genid.FeatureSet_EnforceNamingStyle_field_number:
 				// EnforceNamingStyle is enforced in protoc, languages other than C++
 				// are not supposed to do anything with this feature.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 			default:
 				panic(fmt.Sprintf("unkown field number %d while unmarshalling FeatureSet", num))
 			}
@@ -79,7 +85,11 @@ func unmarshalFeatureSet(b []byte, parent EditionFeatures) EditionFeatures {
 			v, m := protowire.ConsumeBytes(b)
 			b = b[m:]
 			switch num {
+<<<<<<< HEAD
 			case genid.FeatureSet_Go_ext_number:
+=======
+			case genid.GoFeatures_LegacyUnmarshalJsonEnum_field_number:
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 				parent = unmarshalGoFeature(v, parent)
 			}
 		}

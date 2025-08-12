@@ -43,8 +43,11 @@ type Channel struct {
 	// Non-zero traceRefCount means the trace of this channel cannot be deleted.
 	traceRefCount int32
 
+<<<<<<< HEAD
 	// ChannelMetrics holds connectivity state, target and call metrics for the
 	// channel within channelz.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	ChannelMetrics ChannelMetrics
 }
 
@@ -52,8 +55,11 @@ type Channel struct {
 // nesting.
 func (c *Channel) channelzIdentifier() {}
 
+<<<<<<< HEAD
 // String returns a string representation of the Channel, including its parent
 // entity and ID.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (c *Channel) String() string {
 	if c.Parent == nil {
 		return fmt.Sprintf("Channel #%d", c.ID)
@@ -65,31 +71,43 @@ func (c *Channel) id() int64 {
 	return c.ID
 }
 
+<<<<<<< HEAD
 // SubChans returns a copy of the map of sub-channels associated with the
 // Channel.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (c *Channel) SubChans() map[int64]string {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	return copyMap(c.subChans)
 }
 
+<<<<<<< HEAD
 // NestedChans returns a copy of the map of nested channels associated with the
 // Channel.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (c *Channel) NestedChans() map[int64]string {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	return copyMap(c.nestedChans)
 }
 
+<<<<<<< HEAD
 // Trace returns a copy of the Channel's trace data.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (c *Channel) Trace() *ChannelTrace {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	return c.trace.copy()
 }
 
+<<<<<<< HEAD
 // ChannelMetrics holds connectivity state, target and call metrics for the
 // channel within channelz.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 type ChannelMetrics struct {
 	// The current connectivity state of the channel.
 	State atomic.Pointer[connectivity.State]
@@ -147,16 +165,22 @@ func strFromPointer(s *string) string {
 	return *s
 }
 
+<<<<<<< HEAD
 // String returns a string representation of the ChannelMetrics, including its
 // state, target, and call metrics.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (c *ChannelMetrics) String() string {
 	return fmt.Sprintf("State: %v, Target: %s, CallsStarted: %v, CallsSucceeded: %v, CallsFailed: %v, LastCallStartedTimestamp: %v",
 		c.State.Load(), strFromPointer(c.Target.Load()), c.CallsStarted.Load(), c.CallsSucceeded.Load(), c.CallsFailed.Load(), c.LastCallStartedTimestamp.Load(),
 	)
 }
 
+<<<<<<< HEAD
 // NewChannelMetricForTesting creates a new instance of ChannelMetrics with
 // specified initial values for testing purposes.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func NewChannelMetricForTesting(state connectivity.State, target string, started, succeeded, failed, timestamp int64) *ChannelMetrics {
 	c := &ChannelMetrics{}
 	c.State.Store(&state)

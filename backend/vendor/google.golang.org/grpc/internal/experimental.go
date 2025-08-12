@@ -18,6 +18,7 @@
 package internal
 
 var (
+<<<<<<< HEAD
 	// WithBufferPool is implemented by the grpc package and returns a dial
 	// option to configure a shared buffer pool for a grpc.ClientConn.
 	WithBufferPool any // func (grpc.SharedBufferPool) grpc.DialOption
@@ -25,4 +26,13 @@ var (
 	// BufferPool is implemented by the grpc package and returns a server
 	// option to configure a shared buffer pool for a grpc.Server.
 	BufferPool any // func (grpc.SharedBufferPool) grpc.ServerOption
+=======
+	// WithRecvBufferPool is implemented by the grpc package and returns a dial
+	// option to configure a shared buffer pool for a grpc.ClientConn.
+	WithRecvBufferPool any // func (grpc.SharedBufferPool) grpc.DialOption
+
+	// RecvBufferPool is implemented by the grpc package and returns a server
+	// option to configure a shared buffer pool for a grpc.Server.
+	RecvBufferPool any // func (grpc.SharedBufferPool) grpc.ServerOption
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 )

@@ -46,7 +46,11 @@ type entry interface {
 
 // channelMap is the storage data structure for channelz.
 //
+<<<<<<< HEAD
 // Methods of channelMap can be divided into two categories with respect to
+=======
+// Methods of channelMap can be divided in two two categories with respect to
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 // locking.
 //
 // 1. Methods acquire the global lock.
@@ -234,6 +238,16 @@ func copyMap(m map[int64]string) map[int64]string {
 	return n
 }
 
+<<<<<<< HEAD
+=======
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (c *channelMap) getTopChannels(id int64, maxResults int) ([]*Channel, bool) {
 	if maxResults <= 0 {
 		maxResults = EntriesPerPage

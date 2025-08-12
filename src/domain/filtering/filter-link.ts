@@ -1,18 +1,15 @@
 import { Link } from '~/domain/service-map';
-import { FilterEntry, Kind as FilterKind } from './filter-entry';
+import {
+  FilterEntry,
+  Kind as FilterKind,
+  Direction as FilterDirection,
+} from './filter-entry';
 
 import { Filters } from '~/domain/filtering';
 
 export const filterLink = (link: Link, filters: Filters): boolean => {
-  if ((filters.verdicts?.size ?? 0) > 0) {
-    let hasVerdict = false;
-    for (const verdict of filters.verdicts ?? new Set()) {
-      if (link.verdicts.has(verdict)) {
-        hasVerdict = true;
-        break;
-      }
-    }
-    if (!hasVerdict) return false;
+  if (filters.verdict != null && !link.verdicts.has(filters.verdict)) {
+    return false;
   }
 
   if (link.isDNSRequest && filters.skipKubeDns) return false;
@@ -31,29 +28,52 @@ export const filterLink = (link: Link, filters: Filters): boolean => {
 export const filterLinkByEntry = (l: Link, e: FilterEntry): boolean => {
   const sourceIdentityMatch = l.sourceId === e.query;
   const destIdentityMatch = l.destinationId === e.query;
+  const destPortMatch = l.destinationPort?.toString() === e.query;
 
-  let [fromOk, toOk] = [false, false];
-
-  switch (e.kind) {
-    case FilterKind.Identity: {
-      // TODO: This is wrong, coz sourceId/destinationId is not an identity
-      if (e.fromRequired) {
-        if (!sourceIdentityMatch && e.negative) return true;
-        fromOk = sourceIdentityMatch;
+  switch (e.direction) {
+    case FilterDirection.Both: {
+      switch (e.kind) {
+        case FilterKind.Identity: {
+          if (!sourceIdentityMatch && !destIdentityMatch)
+            return e.negative !== false;
+          break;
+        }
+        case FilterKind.Port: {
+          if (!destPortMatch) return e.negative !== false;
+          break;
+        }
       }
-      if (e.toRequired) {
-        if (!destIdentityMatch && e.negative) return true;
-        toOk = destIdentityMatch;
-      }
-
       break;
     }
-    default: {
-      if (e.negative && !sourceIdentityMatch && !destIdentityMatch) return true;
-      fromOk = true;
-      toOk = true;
+    case FilterDirection.To: {
+      switch (e.kind) {
+        case FilterKind.Identity: {
+          if (!destIdentityMatch) return e.negative !== false;
+          break;
+        }
+        case FilterKind.Port: {
+          if (!destPortMatch) return e.negative !== false;
+          break;
+        }
+      }
+      break;
+    }
+    case FilterDirection.From: {
+      switch (e.kind) {
+        case FilterKind.Identity: {
+          if (!sourceIdentityMatch) return e.negative !== false;
+          break;
+        }
+        case FilterKind.Port: {
+          // For From direction with port, we can only check destination port
+          // since Link doesn't have sourcePort
+          if (!destPortMatch) return e.negative !== false;
+          break;
+        }
+      }
+      break;
     }
   }
 
-  return e.negative || fromOk || toOk;
+  return !e.negative;
 };
