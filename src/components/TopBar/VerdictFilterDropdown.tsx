@@ -66,7 +66,7 @@ export const VerdictFilterDropdown = memo<Props>(function VerdictFilterDropdown(
   return (
     <Popover {...popover.props} content={content}>
       <FilterIcon
-        icon={<VerdictIcon />}
+        icon={<VerdictFiltersIcon />}
         text={getLabel()}
         onClick={popover.toggle}
         className={classnames({
