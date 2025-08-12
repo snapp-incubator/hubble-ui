@@ -91,7 +91,7 @@ export const VisualFiltersDropdown = memo<Props>(function VisualFiltersDropdown(
   return (
     <Popover {...popover.props} content={content}>
       <FilterIcon
-        icon={<VisualIcon />}
+        icon={<VisualFiltersIcon />}
         text="Visual"
         onClick={popover.toggle}
         className={classnames({
