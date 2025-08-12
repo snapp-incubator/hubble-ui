@@ -17,7 +17,7 @@ on:
 
 jobs:
   build-and-push-prs:
-    if: ${{ github.repository == 'cilium/hubble-ui' }}
+    if: ${{ github.repository == 'snapp-incubator/hubble-ui' }}
     runs-on: ubuntu-22.04
     strategy:
       matrix:
