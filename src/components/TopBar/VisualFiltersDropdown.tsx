@@ -4,7 +4,7 @@ import classnames from 'classnames';
 
 import { usePopover } from '~/ui/hooks/usePopover';
 
-import VisualIcon from '~/assets/icons/visual-icon.svg';
+import { VisualFiltersIcon } from '~/components/Icons/VisualFiltersIcon';
 import { FilterIcon } from './FilterIcon';
 
 import css from './styles.scss';
