@@ -40,7 +40,9 @@ const filters: FilterOption[] = [
   },
 ];
 
-export const VerdictFilterDropdown = memo<Props>(function VerdictFilterDropdown(props) {
+export const VerdictFilterDropdown = memo<Props>(function VerdictFilterDropdown(
+  props,
+) {
   const popover = usePopover();
 
   const getLabel = useCallback(() => {

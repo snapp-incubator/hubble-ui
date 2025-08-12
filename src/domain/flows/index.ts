@@ -1,7 +1,5 @@
 import _ from 'lodash';
 
-import urlParse from 'url-parse';
-
 import {
   HubbleFlow,
   Verdict,
@@ -13,22 +11,23 @@ import {
   Layer7,
   FlowType,
   L7FlowType,
-  Workload,
   AuthType,
 } from '~/domain/hubble';
 
-import { CiliumEventSubTypesCodes, CiliumDropReasonCodes } from '~/domain/cilium';
-
+import {
+  CiliumEventSubTypesCodes,
+  CiliumDropReasonCodes,
+} from '~/domain/cilium';
 import { WrappedLayer7 } from '~/domain/layer7';
-import { KV, Labels, LabelsProps } from '~/domain/labels';
+import { Labels, LabelsProps } from '~/domain/labels';
+import { memoize } from '~/utils/memoize';
 
 import * as tcpFlagsHelpers from '~/domain/helpers/tcp-flags';
 import * as verdictHelpers from '~/domain/helpers/verdict';
+import * as authtypeHelpers from '~/domain/helpers/auth-type';
 import * as timeHelpers from '~/domain/helpers/time';
 import * as protocolHelpers from '~/domain/helpers/protocol';
 import * as l7helpers from '~/domain/helpers/l7';
-import * as workloadHelpers from '~/domain/helpers/workload';
-import * as authtypeHelpers from '~/domain/helpers/auth-type';
 
 export { HubbleFlow, Verdict, TCPFlags };
 
@@ -39,15 +38,6 @@ export class Flow {
   constructor(flow: HubbleFlow, flowId?: string) {
     this.ref = flow;
     this._id = flowId;
-  }
-
-  // NOTE: HubbleFlow type transforms `time` field into `Time` type, which
-  // cannot pe parsed into original Flow later
-  public get parsableRef(): any {
-    return {
-      ...this.ref,
-      time: this.ref.time ? timeHelpers.timeToDate(this.ref.time) : this.ref.time,
-    };
   }
 
   public compare(rhs: Flow): number {
@@ -114,27 +104,27 @@ export class Flow {
     return this.destinationPodName === podName;
   }
 
-  public senderHasWorkload(target: Workload): boolean {
-    for (const wl of this.sourceWorkloads) {
-      if (workloadHelpers.equals(wl, target)) return true;
+  public senderHasPort(port: number | string): boolean {
+    const portNum = typeof port === 'string' ? parseInt(port, 10) : port;
+    if (Number.isNaN(portNum)) {
+      console.error('flow: senderHasPort check with invalid port: ', port);
+      return false;
     }
-
-    return false;
+    return this.sourcePort === portNum;
   }
 
-  public receiverHasWorkload(target: Workload): boolean {
-    for (const wl of this.destinationWorkloads) {
-      if (workloadHelpers.equals(wl, target)) return true;
+  public receiverHasPort(port: number | string): boolean {
+    const portNum = typeof port === 'string' ? parseInt(port, 10) : port;
+    if (Number.isNaN(portNum)) {
+      console.error('flow: receiverHasPort check with invalid port: ', port);
+      return false;
     }
-
-    return false;
+    return this.destinationPort === portNum;
   }
 
-  private memoId: string | undefined;
-  public get id(): string {
+  @memoize
+  public get id() {
     if (this._id) return this._id;
-
-    if (this.memoId !== undefined) return this.memoId;
 
     let timeStr = '';
     if (this.ref.time) {
@@ -145,27 +135,17 @@ export class Flow {
       timeStr = `${Date.now()}`;
     }
 
-    this.memoId = `${timeStr}-${this.ref.nodeName}`;
-
-    return this.memoId;
+    return `${timeStr}-${this.ref.nodeName}`;
   }
 
-  private memoSourceLabelProps: LabelsProps | undefined;
+  @memoize
   public get sourceLabelProps(): LabelsProps {
-    if (this.memoSourceLabelProps !== undefined) return this.memoSourceLabelProps;
-
-    this.memoSourceLabelProps = Labels.detect(this.sourceLabels);
-
-    return this.memoSourceLabelProps;
+    return Labels.detect(this.sourceLabels);
   }
 
-  private memoDestinationLabelProps: LabelsProps | undefined;
+  @memoize
   public get destinationLabelProps(): LabelsProps {
-    if (this.memoDestinationLabelProps !== undefined) return this.memoDestinationLabelProps;
-
-    this.memoDestinationLabelProps = Labels.detect(this.destinationLabels);
-
-    return this.memoDestinationLabelProps;
+    return Labels.detect(this.destinationLabels);
   }
 
   public get hubbleFlow(): HubbleFlow {
@@ -184,22 +164,14 @@ export class Flow {
     return !!this.ref.destination;
   }
 
-  private memoSourceLabels: KV[] | undefined;
-  public get sourceLabels(): KV[] {
-    if (this.memoSourceLabels !== undefined) return this.memoSourceLabels;
-
-    this.memoSourceLabels = (this.ref.source?.labels || []).map(l => Labels.toKV(l));
-
-    return this.memoSourceLabels;
+  @memoize
+  public get sourceLabels() {
+    return (this.ref.source?.labelsList || []).map(l => Labels.toKV(l));
   }
 
-  private memoDestinationLabels: KV[] | undefined;
-  public get destinationLabels(): KV[] {
-    if (this.memoDestinationLabels !== undefined) return this.memoDestinationLabels;
-
-    this.memoDestinationLabels = (this.ref.destination?.labels || []).map(l => Labels.toKV(l));
-
-    return this.memoDestinationLabels;
+  @memoize
+  public get destinationLabels() {
+    return (this.ref.destination?.labelsList || []).map(l => Labels.toKV(l));
   }
 
   public get sourceNamesList() {
@@ -219,80 +191,56 @@ export class Flow {
   }
 
   // NOTE: this function is just a copy of backend's `getServiceID` function
-  private memoDestinationServiceId: string | undefined;
+  @memoize
   public get destinationServiceId(): string {
-    if (this.memoDestinationServiceId !== undefined) return this.memoDestinationServiceId;
-
     if (!this.destinationLabelProps.isWorld) {
-      this.memoDestinationServiceId = `${this.ref.destination?.identity}`;
-    } else if (this.destinationDns != null) {
-      this.memoDestinationServiceId = `${this.destinationDns}-receiver`;
-    } else {
-      this.memoDestinationServiceId = `world-receiver`;
+      return `${this.ref.destination?.identity}`;
     }
 
-    return this.memoDestinationServiceId;
+    if (this.destinationDns != null) {
+      return `${this.destinationDns}-receiver`;
+    }
+
+    return `world-receiver`;
   }
 
-  private memoSourceServiceId: string | undefined;
+  @memoize
   public get sourceServiceId(): string {
-    if (this.memoSourceServiceId !== undefined) return this.memoSourceServiceId;
-
     if (!this.sourceLabelProps.isWorld) {
-      this.memoSourceServiceId = `${this.ref.source?.identity}`;
-    } else if (this.sourceDns != null) {
-      this.memoSourceServiceId = `${this.sourceDns}-sender`;
-    } else {
-      this.memoSourceServiceId = `world-sender`;
+      return `${this.ref.source?.identity}`;
     }
 
-    return this.memoSourceServiceId;
+    if (this.sourceDns != null) {
+      return `${this.sourceDns}-sender`;
+    }
+
+    return `world-sender`;
   }
 
-  private memoSourceNamespace: string | null | undefined;
+  @memoize
   public get sourceNamespace(): string | null {
-    if (this.memoSourceNamespace !== undefined) return this.memoSourceNamespace;
-
     const sourceNs = this.ref.source?.namespace;
-    if (!!sourceNs) {
-      this.memoSourceNamespace = sourceNs;
-    } else {
-      this.memoSourceNamespace = Labels.findNamespaceInLabels(this.sourceLabels);
-    }
+    if (!!sourceNs) return sourceNs;
 
-    return this.memoSourceNamespace;
+    return Labels.findNamespaceInLabels(this.sourceLabels);
   }
 
-  private memoDestinationNamespace: string | null | undefined;
+  @memoize
   public get destinationNamespace(): string | null {
-    if (this.memoDestinationNamespace !== undefined) return this.memoDestinationNamespace;
-
     const destNs = this.ref.destination?.namespace;
-    if (!!destNs) {
-      this.memoDestinationNamespace = destNs;
-    } else {
-      this.memoDestinationNamespace = Labels.findNamespaceInLabels(this.destinationLabels);
-    }
+    if (!!destNs) return destNs;
 
-    return this.memoDestinationNamespace;
+    return Labels.findNamespaceInLabels(this.destinationLabels);
   }
 
-  private memoSourceIdentityName: string | null | undefined;
-  public get sourceIdentityName(): string | null {
-    if (this.memoSourceIdentityName !== undefined) return this.memoSourceIdentityName;
-
-    this.memoSourceIdentityName = Labels.findAppNameInLabels(this.sourceLabels);
-
-    return this.memoSourceIdentityName;
+  @memoize
+  public get sourceIdentityName() {
+    return Labels.findAppNameInLabels(this.sourceLabels);
   }
 
-  private memoDestinationIdentityName: string | null | undefined;
-  public get destinationIdentityName(): string | null {
-    if (this.memoDestinationIdentityName !== undefined) return this.memoDestinationIdentityName;
-
-    this.memoDestinationIdentityName = Labels.findAppNameInLabels(this.destinationLabels);
-
-    return this.memoDestinationIdentityName;
+  @memoize
+  public get destinationIdentityName() {
+    return Labels.findAppNameInLabels(this.destinationLabels);
   }
 
   public get sourcePodName() {
@@ -315,14 +263,6 @@ export class Flow {
       pod: this.destinationPodName!,
       namespace: this.ref.destination?.namespace,
     };
-  }
-
-  public get sourceWorkloads(): Workload[] {
-    return this.ref.source?.workloads || [];
-  }
-
-  public get destinationWorkloads(): Workload[] {
-    return this.ref.destination?.workloads || [];
   }
 
   public get sourcePort(): number | null {
@@ -348,10 +288,8 @@ export class Flow {
 
     if (this.ref.l7?.dns != null) return 53;
     if (this.ref.l7?.http != null) {
-      const parsedUrl = urlParse(this.ref.l7.http.url);
-      if (parsedUrl != null && !!parsedUrl.port) {
-        return parseInt(parsedUrl.port);
-      }
+      const port = this.l7Wrapped?.http?.parsedUrl?.port;
+      if (port != null) return parseInt(port);
     }
 
     return null;
@@ -394,17 +332,11 @@ export class Flow {
     return this.ref.l7 ?? null;
   }
 
-  private memoL7Wrapped: WrappedLayer7 | null | undefined;
+  @memoize
   public get l7Wrapped(): WrappedLayer7 | null {
-    if (this.memoL7Wrapped !== undefined) return this.memoL7Wrapped;
+    if (!this.hasL7Info || this.ref.l7 == null) return null;
 
-    if (!this.hasL7Info || this.ref.l7 == null) {
-      this.memoL7Wrapped = null;
-    } else {
-      this.memoL7Wrapped = new WrappedLayer7(this.ref.l7);
-    }
-
-    return this.memoL7Wrapped;
+    return new WrappedLayer7(this.ref.l7);
   }
 
   public get isL7Request(): boolean {
@@ -443,7 +375,9 @@ export class Flow {
   }
 
   public get dropReason() {
-    return CiliumDropReasonCodes[this.dropReasonCode as keyof typeof CiliumDropReasonCodes];
+    return CiliumDropReasonCodes[
+      this.dropReasonCode as keyof typeof CiliumDropReasonCodes
+    ];
   }
 
   public get isReply() {
@@ -477,7 +411,9 @@ export class Flow {
   }
 
   public get millisecondsTimestamp() {
-    if (!this.ref.time) return 0;
+    if (!this.ref.time) {
+      return null;
+    }
 
     const { seconds, nanos } = this.ref.time;
     const ms = seconds * 1000 + nanos / 1e6;
@@ -528,22 +464,14 @@ export class Flow {
     return !!this.ref.l4?.icmpv6;
   }
 
-  private memoEnabledTcpFlags: Array<keyof TCPFlags> | undefined;
+  @memoize
   public get enabledTcpFlags(): Array<keyof TCPFlags> {
-    if (this.memoEnabledTcpFlags !== undefined) return this.memoEnabledTcpFlags;
-
-    this.memoEnabledTcpFlags = tcpFlagsHelpers.toArray(this.tcpFlags);
-
-    return this.memoEnabledTcpFlags;
+    return tcpFlagsHelpers.toArray(this.tcpFlags);
   }
 
-  private memoJoinedTcpFlags: string | undefined;
-  public get joinedTcpFlags(): string {
-    if (this.memoJoinedTcpFlags !== undefined) return this.memoJoinedTcpFlags;
-
-    this.memoJoinedTcpFlags = tcpFlagsHelpers.toString(this.tcpFlags);
-
-    return this.memoJoinedTcpFlags;
+  @memoize
+  public get joinedTcpFlags() {
+    return tcpFlagsHelpers.toString(this.tcpFlags);
   }
 
   public get type(): FlowType {
@@ -558,45 +486,38 @@ export class Flow {
     return !!this.ref.l4?.udp;
   }
 
-  private memoIsKubeDnsFlow: boolean | undefined;
-  public get isKubeDnsFlow(): boolean {
-    if (this.memoIsKubeDnsFlow !== undefined) return this.memoIsKubeDnsFlow;
-
-    this.memoIsKubeDnsFlow =
+  @memoize
+  public get isKubeDnsFlow() {
+    return (
       this.trafficDirection === TrafficDirection.Egress &&
       this.isUdp &&
       this.destinationPort === 53 &&
-      this.destinationLabelProps.isKubeDNS;
-
-    return this.memoIsKubeDnsFlow;
+      this.destinationLabelProps.isKubeDNS
+    );
   }
 
-  private memoIsFqdnFlow: boolean | undefined;
+  @memoize
   public get isFqdnFlow() {
-    if (this.memoIsFqdnFlow !== undefined) return this.memoIsFqdnFlow;
-
-    this.memoIsFqdnFlow =
-      this.ref.destination?.labels.includes('reserved:world') &&
-      this.destinationNamesList.length > 0;
-
-    return this.memoIsFqdnFlow;
+    return (
+      this.ref.destination?.labelsList.includes('reserved:world') &&
+      this.destinationNamesList.length > 0
+    );
   }
 
-  private memoIsIpFlow: boolean | undefined;
-  public get isIpFlow(): boolean {
-    if (this.memoIsIpFlow !== undefined) return this.memoIsIpFlow;
-
+  @memoize
+  public get isIpFlow() {
     if (this.ref.trafficDirection === TrafficDirection.Egress) {
-      this.memoIsIpFlow = !!(
-        this.ref.destination?.labels.includes('reserved:world') && this.destinationIp
+      return !!(
+        this.ref.destination?.labelsList.includes('reserved:world') &&
+        this.destinationIp
       );
     } else if (this.ref.trafficDirection === TrafficDirection.Ingress) {
-      this.memoIsIpFlow = !!(this.ref.source?.labels.includes('reserved:world') && this.sourceIp);
+      return !!(
+        this.ref.source?.labelsList.includes('reserved:world') && this.sourceIp
+      );
     } else {
-      this.memoIsIpFlow = false;
+      return false;
     }
-
-    return this.memoIsIpFlow;
   }
 
   public get time() {

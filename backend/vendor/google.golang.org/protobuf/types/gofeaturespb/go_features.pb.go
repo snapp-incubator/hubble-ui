@@ -16,6 +16,7 @@ import (
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
+<<<<<<< HEAD
 	unsafe "unsafe"
 )
 
@@ -156,13 +157,32 @@ type GoFeatures struct {
 	StripEnumPrefix *GoFeatures_StripEnumPrefix `protobuf:"varint,3,opt,name=strip_enum_prefix,json=stripEnumPrefix,enum=pb.GoFeatures_StripEnumPrefix" json:"strip_enum_prefix,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
+=======
+)
+
+type GoFeatures struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Whether or not to generate the deprecated UnmarshalJSON method for enums.
+	LegacyUnmarshalJsonEnum *bool `protobuf:"varint,1,opt,name=legacy_unmarshal_json_enum,json=legacyUnmarshalJsonEnum" json:"legacy_unmarshal_json_enum,omitempty"`
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }
 
 func (x *GoFeatures) Reset() {
 	*x = GoFeatures{}
+<<<<<<< HEAD
 	mi := &file_google_protobuf_go_features_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
+=======
+	if protoimpl.UnsafeEnabled {
+		mi := &file_google_protobuf_go_features_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }
 
 func (x *GoFeatures) String() string {
@@ -173,7 +193,11 @@ func (*GoFeatures) ProtoMessage() {}
 
 func (x *GoFeatures) ProtoReflect() protoreflect.Message {
 	mi := &file_google_protobuf_go_features_proto_msgTypes[0]
+<<<<<<< HEAD
 	if x != nil {
+=======
+	if protoimpl.UnsafeEnabled && x != nil {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -195,6 +219,7 @@ func (x *GoFeatures) GetLegacyUnmarshalJsonEnum() bool {
 	return false
 }
 
+<<<<<<< HEAD
 func (x *GoFeatures) GetApiLevel() GoFeatures_APILevel {
 	if x != nil && x.ApiLevel != nil {
 		return *x.ApiLevel
@@ -209,6 +234,8 @@ func (x *GoFeatures) GetStripEnumPrefix() GoFeatures_StripEnumPrefix {
 	return GoFeatures_STRIP_ENUM_PREFIX_UNSPECIFIED
 }
 
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 var file_google_protobuf_go_features_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.FeatureSet)(nil),
@@ -228,6 +255,7 @@ var (
 
 var File_google_protobuf_go_features_proto protoreflect.FileDescriptor
 
+<<<<<<< HEAD
 const file_google_protobuf_go_features_proto_rawDesc = "" +
 	"\n" +
 	"!google/protobuf/go_features.proto\x12\x02pb\x1a google/protobuf/descriptor.proto\"\xab\x05\n" +
@@ -255,15 +283,53 @@ const file_google_protobuf_go_features_proto_rawDesc = "" +
 var (
 	file_google_protobuf_go_features_proto_rawDescOnce sync.Once
 	file_google_protobuf_go_features_proto_rawDescData []byte
+=======
+var file_google_protobuf_go_features_proto_rawDesc = []byte{
+	0x0a, 0x21, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2f, 0x67, 0x6f, 0x5f, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x1a, 0x20, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
+	0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc9, 0x01, 0x0a, 0x0a, 0x47, 0x6f,
+	0x46, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x12, 0xba, 0x01, 0x0a, 0x1a, 0x6c, 0x65, 0x67,
+	0x61, 0x63, 0x79, 0x5f, 0x75, 0x6e, 0x6d, 0x61, 0x72, 0x73, 0x68, 0x61, 0x6c, 0x5f, 0x6a, 0x73,
+	0x6f, 0x6e, 0x5f, 0x65, 0x6e, 0x75, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x42, 0x7d, 0x88,
+	0x01, 0x01, 0x98, 0x01, 0x06, 0xa2, 0x01, 0x09, 0x12, 0x04, 0x74, 0x72, 0x75, 0x65, 0x18, 0x84,
+	0x07, 0xa2, 0x01, 0x0a, 0x12, 0x05, 0x66, 0x61, 0x6c, 0x73, 0x65, 0x18, 0xe7, 0x07, 0xb2, 0x01,
+	0x5b, 0x08, 0xe8, 0x07, 0x10, 0xe8, 0x07, 0x1a, 0x53, 0x54, 0x68, 0x65, 0x20, 0x6c, 0x65, 0x67,
+	0x61, 0x63, 0x79, 0x20, 0x55, 0x6e, 0x6d, 0x61, 0x72, 0x73, 0x68, 0x61, 0x6c, 0x4a, 0x53, 0x4f,
+	0x4e, 0x20, 0x41, 0x50, 0x49, 0x20, 0x69, 0x73, 0x20, 0x64, 0x65, 0x70, 0x72, 0x65, 0x63, 0x61,
+	0x74, 0x65, 0x64, 0x20, 0x61, 0x6e, 0x64, 0x20, 0x77, 0x69, 0x6c, 0x6c, 0x20, 0x62, 0x65, 0x20,
+	0x72, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x64, 0x20, 0x69, 0x6e, 0x20, 0x61, 0x20, 0x66, 0x75, 0x74,
+	0x75, 0x72, 0x65, 0x20, 0x65, 0x64, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x52, 0x17, 0x6c, 0x65,
+	0x67, 0x61, 0x63, 0x79, 0x55, 0x6e, 0x6d, 0x61, 0x72, 0x73, 0x68, 0x61, 0x6c, 0x4a, 0x73, 0x6f,
+	0x6e, 0x45, 0x6e, 0x75, 0x6d, 0x3a, 0x3c, 0x0a, 0x02, 0x67, 0x6f, 0x12, 0x1b, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x46, 0x65,
+	0x61, 0x74, 0x75, 0x72, 0x65, 0x53, 0x65, 0x74, 0x18, 0xea, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0e, 0x2e, 0x70, 0x62, 0x2e, 0x47, 0x6f, 0x46, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x52,
+	0x02, 0x67, 0x6f, 0x42, 0x2f, 0x5a, 0x2d, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x67, 0x6f,
+	0x6c, 0x61, 0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x67, 0x6f, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72,
+	0x65, 0x73, 0x70, 0x62,
+}
+
+var (
+	file_google_protobuf_go_features_proto_rawDescOnce sync.Once
+	file_google_protobuf_go_features_proto_rawDescData = file_google_protobuf_go_features_proto_rawDesc
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 )
 
 func file_google_protobuf_go_features_proto_rawDescGZIP() []byte {
 	file_google_protobuf_go_features_proto_rawDescOnce.Do(func() {
+<<<<<<< HEAD
 		file_google_protobuf_go_features_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_google_protobuf_go_features_proto_rawDesc), len(file_google_protobuf_go_features_proto_rawDesc)))
+=======
+		file_google_protobuf_go_features_proto_rawDescData = protoimpl.X.CompressGZIP(file_google_protobuf_go_features_proto_rawDescData)
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	})
 	return file_google_protobuf_go_features_proto_rawDescData
 }
 
+<<<<<<< HEAD
 var file_google_protobuf_go_features_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_google_protobuf_go_features_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_google_protobuf_go_features_proto_goTypes = []any{
@@ -282,6 +348,21 @@ var file_google_protobuf_go_features_proto_depIdxs = []int32{
 	3, // [3:4] is the sub-list for extension type_name
 	2, // [2:3] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
+=======
+var file_google_protobuf_go_features_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_google_protobuf_go_features_proto_goTypes = []interface{}{
+	(*GoFeatures)(nil),              // 0: pb.GoFeatures
+	(*descriptorpb.FeatureSet)(nil), // 1: google.protobuf.FeatureSet
+}
+var file_google_protobuf_go_features_proto_depIdxs = []int32{
+	1, // 0: pb.go:extendee -> google.protobuf.FeatureSet
+	0, // 1: pb.go:type_name -> pb.GoFeatures
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	1, // [1:2] is the sub-list for extension type_name
+	0, // [0:1] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }
 
 func init() { file_google_protobuf_go_features_proto_init() }
@@ -289,23 +370,52 @@ func file_google_protobuf_go_features_proto_init() {
 	if File_google_protobuf_go_features_proto != nil {
 		return
 	}
+<<<<<<< HEAD
+=======
+	if !protoimpl.UnsafeEnabled {
+		file_google_protobuf_go_features_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GoFeatures); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
+<<<<<<< HEAD
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_google_protobuf_go_features_proto_rawDesc), len(file_google_protobuf_go_features_proto_rawDesc)),
 			NumEnums:      2,
+=======
+			RawDescriptor: file_google_protobuf_go_features_proto_rawDesc,
+			NumEnums:      0,
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 			NumMessages:   1,
 			NumExtensions: 1,
 			NumServices:   0,
 		},
 		GoTypes:           file_google_protobuf_go_features_proto_goTypes,
 		DependencyIndexes: file_google_protobuf_go_features_proto_depIdxs,
+<<<<<<< HEAD
 		EnumInfos:         file_google_protobuf_go_features_proto_enumTypes,
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		MessageInfos:      file_google_protobuf_go_features_proto_msgTypes,
 		ExtensionInfos:    file_google_protobuf_go_features_proto_extTypes,
 	}.Build()
 	File_google_protobuf_go_features_proto = out.File
+<<<<<<< HEAD
+=======
+	file_google_protobuf_go_features_proto_rawDesc = nil
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	file_google_protobuf_go_features_proto_goTypes = nil
 	file_google_protobuf_go_features_proto_depIdxs = nil
 }

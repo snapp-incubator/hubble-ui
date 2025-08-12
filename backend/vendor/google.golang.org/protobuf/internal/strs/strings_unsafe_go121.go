@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build !purego && !appengine && go1.21
+// +build !purego,!appengine,go1.21
+
 package strs
 
 import (

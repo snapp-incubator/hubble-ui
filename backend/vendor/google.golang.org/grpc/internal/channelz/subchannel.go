@@ -47,14 +47,20 @@ func (sc *SubChannel) id() int64 {
 	return sc.ID
 }
 
+<<<<<<< HEAD
 // Sockets returns a copy of the sockets map associated with the SubChannel.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (sc *SubChannel) Sockets() map[int64]string {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	return copyMap(sc.sockets)
 }
 
+<<<<<<< HEAD
 // Trace returns a copy of the ChannelTrace associated with the SubChannel.
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (sc *SubChannel) Trace() *ChannelTrace {
 	db.mu.RLock()
 	defer db.mu.RUnlock()

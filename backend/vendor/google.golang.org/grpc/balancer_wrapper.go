@@ -24,24 +24,32 @@ import (
 	"sync"
 
 	"google.golang.org/grpc/balancer"
+<<<<<<< HEAD
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/experimental/stats"
 	"google.golang.org/grpc/internal"
+=======
+	"google.golang.org/grpc/connectivity"
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	"google.golang.org/grpc/internal/balancer/gracefulswitch"
 	"google.golang.org/grpc/internal/channelz"
 	"google.golang.org/grpc/internal/grpcsync"
 	"google.golang.org/grpc/resolver"
+<<<<<<< HEAD
 	"google.golang.org/grpc/status"
 )
 
 var (
+	setConnectedAddress = internal.SetConnectedAddress.(func(*balancer.SubConnState, resolver.Address))
 	// noOpRegisterHealthListenerFn is used when client side health checking is
 	// disabled. It sends a single READY update on the registered listener.
 	noOpRegisterHealthListenerFn = func(_ context.Context, listener func(balancer.SubConnState)) func() {
 		listener(balancer.SubConnState{ConnectivityState: connectivity.Ready})
 		return func() {}
 	}
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 )
 
 // ccBalancerWrapper sits between the ClientConn and the Balancer.
@@ -59,7 +67,10 @@ var (
 // It uses the gracefulswitch.Balancer internally to ensure that balancer
 // switches happen in a graceful manner.
 type ccBalancerWrapper struct {
+<<<<<<< HEAD
 	internal.EnforceClientConnEmbedding
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	// The following fields are initialized when the wrapper is created and are
 	// read-only afterwards, and therefore can be accessed without a mutex.
 	cc               *ClientConn
@@ -101,16 +112,23 @@ func newCCBalancerWrapper(cc *ClientConn) *ccBalancerWrapper {
 	return ccb
 }
 
+<<<<<<< HEAD
 func (ccb *ccBalancerWrapper) MetricsRecorder() stats.MetricsRecorder {
 	return ccb.cc.metricsRecorderList
 }
 
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 // updateClientConnState is invoked by grpc to push a ClientConnState update to
 // the underlying balancer.  This is always executed from the serializer, so
 // it is safe to call into the balancer here.
 func (ccb *ccBalancerWrapper) updateClientConnState(ccs *balancer.ClientConnState) error {
 	errCh := make(chan error)
+<<<<<<< HEAD
 	uccs := func(ctx context.Context) {
+=======
+	ok := ccb.serializer.Schedule(func(ctx context.Context) {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		defer close(errCh)
 		if ctx.Err() != nil || ccb.balancer == nil {
 			return
@@ -125,6 +143,7 @@ func (ccb *ccBalancerWrapper) updateClientConnState(ccs *balancer.ClientConnStat
 			logger.Infof("error from balancer.UpdateClientConnState: %v", err)
 		}
 		errCh <- err
+<<<<<<< HEAD
 	}
 	onFailure := func() { close(errCh) }
 
@@ -135,13 +154,23 @@ func (ccb *ccBalancerWrapper) updateClientConnState(ccs *balancer.ClientConnStat
 	// callback), we have to use the ScheduleOr method and not the MaybeSchedule
 	// method on the serializer.
 	ccb.serializer.ScheduleOr(uccs, onFailure)
+=======
+	})
+	if !ok {
+		return nil
+	}
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	return <-errCh
 }
 
 // resolverError is invoked by grpc to push a resolver error to the underlying
 // balancer.  The call to the balancer is executed from the serializer.
 func (ccb *ccBalancerWrapper) resolverError(err error) {
+<<<<<<< HEAD
 	ccb.serializer.TrySchedule(func(ctx context.Context) {
+=======
+	ccb.serializer.Schedule(func(ctx context.Context) {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		if ctx.Err() != nil || ccb.balancer == nil {
 			return
 		}
@@ -157,7 +186,11 @@ func (ccb *ccBalancerWrapper) close() {
 	ccb.closed = true
 	ccb.mu.Unlock()
 	channelz.Info(logger, ccb.cc.channelz, "ccBalancerWrapper: closing")
+<<<<<<< HEAD
 	ccb.serializer.TrySchedule(func(context.Context) {
+=======
+	ccb.serializer.Schedule(func(context.Context) {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		if ccb.balancer == nil {
 			return
 		}
@@ -169,7 +202,11 @@ func (ccb *ccBalancerWrapper) close() {
 
 // exitIdle invokes the balancer's exitIdle method in the serializer.
 func (ccb *ccBalancerWrapper) exitIdle() {
+<<<<<<< HEAD
 	ccb.serializer.TrySchedule(func(ctx context.Context) {
+=======
+	ccb.serializer.Schedule(func(ctx context.Context) {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		if ctx.Err() != nil || ccb.balancer == nil {
 			return
 		}
@@ -201,13 +238,20 @@ func (ccb *ccBalancerWrapper) NewSubConn(addrs []resolver.Address, opts balancer
 		ac:            ac,
 		producers:     make(map[balancer.ProducerBuilder]*refCountedProducer),
 		stateListener: opts.StateListener,
+<<<<<<< HEAD
 		healthData:    newHealthData(connectivity.Idle),
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	}
 	ac.acbw = acbw
 	return acbw, nil
 }
 
+<<<<<<< HEAD
 func (ccb *ccBalancerWrapper) RemoveSubConn(balancer.SubConn) {
+=======
+func (ccb *ccBalancerWrapper) RemoveSubConn(sc balancer.SubConn) {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	// The graceful switch balancer will never call this.
 	logger.Errorf("ccb RemoveSubConn(%v) called unexpectedly, sc")
 }
@@ -267,11 +311,15 @@ func (ccb *ccBalancerWrapper) Target() string {
 // acBalancerWrapper is a wrapper on top of ac for balancers.
 // It implements balancer.SubConn interface.
 type acBalancerWrapper struct {
+<<<<<<< HEAD
 	internal.EnforceSubConnEmbedding
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	ac            *addrConn          // read-only
 	ccb           *ccBalancerWrapper // read-only
 	stateListener func(balancer.SubConnState)
 
+<<<<<<< HEAD
 	producersMu sync.Mutex
 	producers   map[balancer.ProducerBuilder]*refCountedProducer
 
@@ -300,11 +348,16 @@ func newHealthData(s connectivity.State) *healthData {
 		connectivityState:   s,
 		closeHealthProducer: func() {},
 	}
+=======
+	mu        sync.Mutex
+	producers map[balancer.ProducerBuilder]*refCountedProducer
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }
 
 // updateState is invoked by grpc to push a subConn state update to the
 // underlying balancer.
-func (acbw *acBalancerWrapper) updateState(s connectivity.State, err error) {
+<<<<<<< HEAD
+func (acbw *acBalancerWrapper) updateState(s connectivity.State, curAddr resolver.Address, err error) {
 	acbw.ccb.serializer.TrySchedule(func(ctx context.Context) {
 		if ctx.Err() != nil || acbw.ccb.balancer == nil {
 			return
@@ -316,6 +369,9 @@ func (acbw *acBalancerWrapper) updateState(s connectivity.State, err error) {
 		// opts.StateListener is set, so this cannot ever be nil.
 		// TODO: delete this comment when UpdateSubConnState is removed.
 		scs := balancer.SubConnState{ConnectivityState: s, ConnectionError: err}
+		if s == connectivity.Ready {
+			setConnectedAddress(&scs, curAddr)
+		}
 		// Invalidate the health listener by updating the healthData.
 		acbw.healthMu.Lock()
 		// A race may occur if a health listener is registered soon after the
@@ -335,6 +391,17 @@ func (acbw *acBalancerWrapper) updateState(s connectivity.State, err error) {
 		acbw.healthMu.Unlock()
 
 		acbw.stateListener(scs)
+=======
+func (acbw *acBalancerWrapper) updateState(s connectivity.State, err error) {
+	acbw.ccb.serializer.Schedule(func(ctx context.Context) {
+		if ctx.Err() != nil || acbw.ccb.balancer == nil {
+			return
+		}
+		// Even though it is optional for balancers, gracefulswitch ensures
+		// opts.StateListener is set, so this cannot ever be nil.
+		// TODO: delete this comment when UpdateSubConnState is removed.
+		acbw.stateListener(balancer.SubConnState{ConnectivityState: s, ConnectionError: err})
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	})
 }
 
@@ -351,7 +418,10 @@ func (acbw *acBalancerWrapper) Connect() {
 }
 
 func (acbw *acBalancerWrapper) Shutdown() {
+<<<<<<< HEAD
 	acbw.closeProducers()
+=======
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	acbw.ccb.cc.removeAddrConn(acbw.ac, errConnDrain)
 }
 
@@ -359,10 +429,16 @@ func (acbw *acBalancerWrapper) Shutdown() {
 // ready, blocks until it is or ctx expires.  Returns an error when the context
 // expires or the addrConn is shut down.
 func (acbw *acBalancerWrapper) NewStream(ctx context.Context, desc *StreamDesc, method string, opts ...CallOption) (ClientStream, error) {
+<<<<<<< HEAD
 	transport := acbw.ac.getReadyTransport()
 	if transport == nil {
 		return nil, status.Errorf(codes.Unavailable, "SubConn state is not Ready")
 
+=======
+	transport, err := acbw.ac.getTransport(ctx)
+	if err != nil {
+		return nil, err
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	}
 	return newNonRetryClientStream(ctx, desc, method, transport, acbw.ac, opts...)
 }
@@ -387,15 +463,25 @@ type refCountedProducer struct {
 }
 
 func (acbw *acBalancerWrapper) GetOrBuildProducer(pb balancer.ProducerBuilder) (balancer.Producer, func()) {
+<<<<<<< HEAD
 	acbw.producersMu.Lock()
 	defer acbw.producersMu.Unlock()
+=======
+	acbw.mu.Lock()
+	defer acbw.mu.Unlock()
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 
 	// Look up existing producer from this builder.
 	pData := acbw.producers[pb]
 	if pData == nil {
 		// Not found; create a new one and add it to the producers map.
+<<<<<<< HEAD
 		p, closeFn := pb.Build(acbw)
 		pData = &refCountedProducer{producer: p, close: closeFn}
+=======
+		p, close := pb.Build(acbw)
+		pData = &refCountedProducer{producer: p, close: close}
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		acbw.producers[pb] = pData
 	}
 	// Account for this new reference.
@@ -405,15 +491,20 @@ func (acbw *acBalancerWrapper) GetOrBuildProducer(pb balancer.ProducerBuilder) (
 	// and delete the refCountedProducer from the map if the total reference
 	// count goes to zero.
 	unref := func() {
+<<<<<<< HEAD
 		acbw.producersMu.Lock()
 		// If closeProducers has already closed this producer instance, refs is
 		// set to 0, so the check after decrementing will never pass, and the
 		// producer will not be double-closed.
+=======
+		acbw.mu.Lock()
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		pData.refs--
 		if pData.refs == 0 {
 			defer pData.close() // Run outside the acbw mutex
 			delete(acbw.producers, pb)
 		}
+<<<<<<< HEAD
 		acbw.producersMu.Unlock()
 	}
 	return pData.producer, sync.OnceFunc(unref)
@@ -446,14 +537,13 @@ func (acbw *acBalancerWrapper) healthListenerRegFn() func(context.Context, func(
 	if acbw.ccb.cc.dopts.disableHealthCheck {
 		return noOpRegisterHealthListenerFn
 	}
-	cfg := acbw.ac.cc.healthCheckConfig()
-	if cfg == nil {
-		return noOpRegisterHealthListenerFn
-	}
 	regHealthLisFn := internal.RegisterClientHealthCheckListener
 	if regHealthLisFn == nil {
 		// The health package is not imported.
-		channelz.Error(logger, acbw.ac.channelz, "Health check is requested but health package is not imported.")
+		return noOpRegisterHealthListenerFn
+	}
+	cfg := acbw.ac.cc.healthCheckConfig()
+	if cfg == nil {
 		return noOpRegisterHealthListenerFn
 	}
 	return func(ctx context.Context, listener func(balancer.SubConnState)) func() {
@@ -514,4 +604,9 @@ func (acbw *acBalancerWrapper) RegisterHealthListener(listener func(balancer.Sub
 
 		hd.closeHealthProducer = registerFn(ctx, listenerWrapper)
 	})
+=======
+		acbw.mu.Unlock()
+	}
+	return pData.producer, grpcsync.OnceFunc(unref)
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }

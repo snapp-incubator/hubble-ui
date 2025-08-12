@@ -28,7 +28,15 @@ type extField struct {
 type Types struct {
 	// atomicExtFiles is used with sync/atomic and hence must be the first word
 	// of the struct to guarantee 64-bit alignment.
+<<<<<<< HEAD
 	atomicExtFiles atomic.Uint64
+=======
+	//
+	// TODO(stapelberg): once we only support Go 1.19 and newer, switch this
+	// field to be of type atomic.Uint64 to guarantee alignment on
+	// stack-allocated values, too.
+	atomicExtFiles uint64
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	extMu          sync.Mutex
 
 	files *protoregistry.Files
@@ -86,7 +94,11 @@ func (t *Types) FindExtensionByName(name protoreflect.FullName) (protoreflect.Ex
 func (t *Types) FindExtensionByNumber(message protoreflect.FullName, field protoreflect.FieldNumber) (protoreflect.ExtensionType, error) {
 	// Construct the extension number map lazily, since not every user will need it.
 	// Update the map if new files are added to the registry.
+<<<<<<< HEAD
 	if t.atomicExtFiles.Load() != uint64(t.files.NumFiles()) {
+=======
+	if atomic.LoadUint64(&t.atomicExtFiles) != uint64(t.files.NumFiles()) {
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		t.updateExtensions()
 	}
 	xd := t.extensionsByMessage[extField{message, field}]
@@ -129,10 +141,17 @@ func (t *Types) FindMessageByURL(url string) (protoreflect.MessageType, error) {
 func (t *Types) updateExtensions() {
 	t.extMu.Lock()
 	defer t.extMu.Unlock()
+<<<<<<< HEAD
 	if t.atomicExtFiles.Load() == uint64(t.files.NumFiles()) {
 		return
 	}
 	defer t.atomicExtFiles.Store(uint64(t.files.NumFiles()))
+=======
+	if atomic.LoadUint64(&t.atomicExtFiles) == uint64(t.files.NumFiles()) {
+		return
+	}
+	defer atomic.StoreUint64(&t.atomicExtFiles, uint64(t.files.NumFiles()))
+>>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	t.files.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		t.registerExtensions(fd.Extensions())
 		t.registerExtensionsInMessages(fd.Messages())

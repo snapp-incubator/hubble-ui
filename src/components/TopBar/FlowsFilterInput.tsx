@@ -94,7 +94,7 @@ export const FlowsFilterInput = (props: Props) => {
         rightElement: rightElement,
         className: Classes.INPUT,
         placeholder:
-          'Filter by: label key=val, ip=1.1.1.1, dns=google.com, identity=42, pod=frontend',
+          'Filter by: label key=val, ip=1.1.1.1, dns=google.com, identity=42, pod=frontend, port=80',
       }}
     />
   );
