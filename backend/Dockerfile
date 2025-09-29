@@ -27,7 +27,7 @@ COPY ./build-gops.sh .
 RUN --mount=target=/root/.cache,type=cache --mount=target=/go/pkg/mod,type=cache \
     ./build-gops.sh
 
-FROM docker.io/library/node:18-alpine3.18@sha256:435dcad253bb5b7f347ebc69c8cc52de7c912eb7241098b920f2fc2d7843183d
+FROM docker.io/library/node:22-alpine3.18@sha256:303dec48be59e127b9166900a5548dcc36e070a50e0b1604f1324787f92fd900
 # TARGETOS is an automatic platform ARG enabled by Docker BuildKit.
 ARG TARGETOS
 # TARGETARCH is an automatic platform ARG enabled by Docker BuildKit.
