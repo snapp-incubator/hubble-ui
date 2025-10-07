@@ -45,7 +45,7 @@ jobs:
           echo ::set-output name=tag::${GITHUB_REF##*/}
 
       - name: Checkout Source Code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
 
       - name: Release Build ${{ matrix.name }}
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991
@@ -99,7 +99,7 @@ jobs:
           mkdir -p image-digest/
 
       - name: Download digests of all images built
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
           path: image-digest/
 
