@@ -1021,20 +1021,20 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@blueprintjs/colors@^5.1.9":
-  version "5.1.9"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.9.tgz#9b14e6181ac89b487c56a62b4cc82ce32cb33f8c"
-  integrity sha512-gk9nlb2tc1qBK/BpVHkC0KQSAmd9PnF60D0iCDEyyh1R/3UzwhTYUvw9Q0XMLfFInNeVAbfsIbko41BmLptAaA==
+"@blueprintjs/colors@^5.1.11":
+  version "5.1.11"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.11.tgz#f0e6d3fd0688ba386504984048fe57ac33894b80"
+  integrity sha512-nSmsgfORb1bYxW4FiMBmFuPPqBK0IbLn1M0hqQCZQ+3hkMJKyQIypBCsw44o4KrpJXbWdS7y2I/p40ZWubYHXw==
   dependencies:
     tslib "~2.6.2"
 
-"@blueprintjs/core@6.3.1", "@blueprintjs/core@^6.3.1":
-  version "6.3.1"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/core/-/core-6.3.1.tgz#4a96214c9b845144126e36b81e464344aa275be6"
-  integrity sha512-mvpzyrkkyLdprL9LgzGeQBtR+9dZFXizmwRHHWVFQzIvLNjU+9EIwJlnKBjIAovsKSvZnMRc/8pSXn/LTEQDVQ==
+"@blueprintjs/core@6.3.4", "@blueprintjs/core@^6.3.4":
+  version "6.3.4"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/core/-/core-6.3.4.tgz#611e58f0538002f95b733b6eca248c72feb0206f"
+  integrity sha512-z3YOtqBhMgvdT6twZK0jhB8VTtYa02QNP0LCwW3+J2jZaDjftgk72DoSdIvQtKU6l89AMS0WULClEBrnLRpMfA==
   dependencies:
-    "@blueprintjs/colors" "^5.1.9"
-    "@blueprintjs/icons" "^6.1.0"
+    "@blueprintjs/colors" "^5.1.11"
+    "@blueprintjs/icons" "^6.3.1"
     "@popperjs/core" "^2.11.8"
     classnames "^2.3.1"
     normalize.css "^8.0.1"
@@ -1043,22 +1043,23 @@
     tslib "~2.6.2"
     use-sync-external-store "^1.2.0"
 
-"@blueprintjs/icons@6.1.0", "@blueprintjs/icons@^6.1.0":
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/icons/-/icons-6.1.0.tgz#6213027f7517fdd305ec6b5a61f8879aca8569a5"
-  integrity sha512-FvARNeJGvQPwewtKBB/8jYAj1xQFXFf34/SSdpDxZGhAeEf98NdUHilsel3M2wT/FPNWJCKhDHSND4sDgpMr+A==
+"@blueprintjs/icons@6.3.1", "@blueprintjs/icons@^6.3.1":
+  version "6.3.1"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/icons/-/icons-6.3.1.tgz#425e36f36fde291a0403c4bb79b17de1a358d3ef"
+  integrity sha512-jq7bsOu6WT7hMl/PtCuTUwV3OOjQoPehnaiRxpLaMktWLzi9ELFhL6diV6j1hc2qP/spA45AqUof61F6GHt7gg==
   dependencies:
     change-case "^4.1.2"
     classnames "^2.3.1"
     tslib "~2.6.2"
 
-"@blueprintjs/select@6.0.5":
-  version "6.0.5"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/select/-/select-6.0.5.tgz#d6da38995643f4d3234be33b60da8fbafc6e19dd"
-  integrity sha512-85i7bzxI/ABIJ/D8zufZkrzlj/ozt8YPqcUdYYlBv0VTC8cNyhNSp+zUohEEdTlc00EHX6I55EjSI7HbuFyd5Q==
+"@blueprintjs/select@6.0.8":
+  version "6.0.8"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/select/-/select-6.0.8.tgz#c4227bdac4821fa35cd96f1e2e0f421212aa4106"
+  integrity sha512-R/bZUqm3cFeXCDJrLIen35ypgPdmFRQhW7tqc/UCI1AVRDTBUNybxClbzpgQ0mmtE3TjYi6Dyx9fpq2fkx9e3Q==
   dependencies:
-    "@blueprintjs/core" "^6.3.1"
-    "@blueprintjs/icons" "^6.1.0"
+    "@blueprintjs/colors" "^5.1.11"
+    "@blueprintjs/core" "^6.3.4"
+    "@blueprintjs/icons" "^6.3.1"
     classnames "^2.3.1"
     tslib "~2.6.2"
 
@@ -2899,10 +2900,10 @@ available-typed-arrays@^1.0.7:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
-axios@^1.12.2:
-  version "1.12.2"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.12.2.tgz#6c307390136cf7a2278d09cec63b136dfc6e6da7"
-  integrity sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==
+axios@^1.13.2:
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.2.tgz#9ada120b7b5ab24509553ec3e40123521117f687"
+  integrity sha512-VPk9ebNqPcy5lRGuSlKx752IlDatOjT9paPlm8A7yOuW2Fbvp4X3JznJtT4f0GzGLLiWE9W8onz51SqLYwzGaA==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.4"
@@ -3693,10 +3694,10 @@ core-js-compat@^3.31.0, core-js-compat@^3.33.1:
   dependencies:
     browserslist "^4.25.1"
 
-core-js@3.45.1:
-  version "3.45.1"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.45.1.tgz#5810e04a1b4e9bc5ddaa4dd12e702ff67300634d"
-  integrity sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==
+core-js@3.47.0:
+  version "3.47.0"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.47.0.tgz#436ef07650e191afeb84c24481b298bd60eb4a17"
+  integrity sha512-c3Q2VVkGAUyupsjRnaNX6u8Dq2vAdzm9iuPj5FW0fRxzlxgq9Q39MDq10IvmQSpLgHQNyQzQmOo6bgGHmH3NNg==
 
 core-util-is@~1.0.0:
   version "1.0.3"
@@ -5645,10 +5646,10 @@ globjoin@^0.1.4:
   resolved "https://registry.npmjs.org/globjoin/-/globjoin-0.1.4.tgz"
   integrity sha512-xYfnw62CKG8nLkZBfWbhWwDw02CHty86jfPcc2cr3ZfeuK9ysoVPPEUxf21bAD/rWAgk52SuBrLJlefNy8mvFg==
 
-google-protobuf@4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-4.0.0.tgz#9352fdbad77538dad1355c8a811c12aed7cfbce3"
-  integrity sha512-b8wmenhUMf2WNL+xIJ/slvD/hEE6V3nRnG86O2bzkBrMweM9gnqZE1dfXlDjibY3aXJXDNbAHepevYyQ7qWKsQ==
+google-protobuf@4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-4.0.1.tgz#9e5935307ead0e32714e33f33a3caac9bd9b49b4"
+  integrity sha512-0I4mx3UtAwpcc8l9Ds5gHcwV2FyPdwvxxBcor8LusE4b6PjoFxEngZRBepjvuQ4B0eZ2iu/Vezh8oRsnpJ9UGA==
 
 google-protobuf@^3.15.5:
   version "3.21.2"
@@ -8890,17 +8891,17 @@ react-popper@^2.3.0:
     react-fast-compare "^3.0.1"
     warning "^4.0.2"
 
-react-router-dom@7.9.3:
-  version "7.9.3"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.9.3.tgz#67ab1655f67b9b6108fe20ed3d4881b53dccf87a"
-  integrity sha512-1QSbA0TGGFKTAc/aWjpfW/zoEukYfU4dc1dLkT/vvf54JoGMkW+fNA+3oyo2gWVW1GM7BxjJVHz5GnPJv40rvg==
+react-router-dom@7.9.6:
+  version "7.9.6"
+  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.9.6.tgz#f2a0d12961d67bd87ab48e5ef42fa1f45beae357"
+  integrity sha512-2MkC2XSXq6HjGcihnx1s0DBWQETI4mlis4Ux7YTLvP67xnGxCvq+BcCQSO81qQHVUTM1V53tl4iVVaY5sReCOA==
   dependencies:
-    react-router "7.9.3"
+    react-router "7.9.6"
 
-react-router@7.9.3:
-  version "7.9.3"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.9.3.tgz#f2d5ff6181851de3df3acb4e7364fce0dee5fba2"
-  integrity sha512-4o2iWCFIwhI/eYAIL43+cjORXYn/aRQPgtFRRZb3VzoyQ5Uej0Bmqj7437L97N9NJW4wnicSwLOLS+yCXfAPgg==
+react-router@7.9.6:
+  version "7.9.6"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.9.6.tgz#003c8de335fdd7390286a478dcfd9579c1826137"
+  integrity sha512-Y1tUp8clYRXpfPITyuifmSoE2vncSME18uVLgaqyxh9H35JWpIfzHo+9y3Fzh5odk/jxPW29IgLgzcdwxGqyNA==
   dependencies:
     cookie "^1.0.1"
     set-cookie-parser "^2.6.0"
@@ -8944,10 +8945,10 @@ react-transition-group@^4.4.5:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-react-window@*, react-window@2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/react-window/-/react-window-2.1.2.tgz#f18900ab9e60a7c6549e670cded4845f656ae382"
-  integrity sha512-3PnhB1bXauRVTR1vVwEmFjbaNDCIubOoNLTvvHrOI9cGOkPGb5XAzlprNN/FuUlnKsaaws31t3IJYbJJvhJcBQ==
+react-window@*, react-window@2.2.3:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-2.2.3.tgz#f8ffdddbb612ccd3e1314b59fce79af85d3f15e3"
+  integrity sha512-gTRqQYC8ojbiXyd9duYFiSn2TJw0ROXCgYjenOvNKITWzK0m0eCvkUsEUM08xvydkMh7ncp+LE0uS3DeNGZxnQ==
 
 react@18.2.0:
   version "18.2.0"
