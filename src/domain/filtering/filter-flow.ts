@@ -12,7 +12,7 @@ export const filterFlow = (flow: Flow, filters: Filters): boolean => {
       return false;
   }
 
-  if (filters.verdict != null && flow.verdict !== filters.verdict) {
+  if (filters.verdicts?.size && ![...filters.verdicts].some(v => flow.verdict === v)) {
     return false;
   }
 

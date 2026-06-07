@@ -7,6 +7,7 @@ import { FilterEntry, FilterKind, Filters } from '~/domain/filtering';
 import { Status } from '~/domain/status';
 import { TransferState } from '~/domain/interactions';
 import { Projects } from '~/utils/projects';
+import { Application } from '~/domain/common';
 
 // This store maintains data that is configured by control interfaces
 export default class ControlStore {
@@ -100,12 +101,23 @@ export default class ControlStore {
     this.verdict = v;
   }
 
-  public setHttpStatus(st: string | null) {
+  public setHttpStatus(st: string | null): string | null {
+    const prev = this.httpStatus;
     this.httpStatus = st;
+    return prev;
   }
 
-  public setFlowFilters(ffs: FilterEntry[]) {
+  public setFlowFilters(ffs: FilterEntry[]): FilterEntry[] {
+    const prev = this.flowFilters;
     this.flowFilters = ffs;
+    return prev;
+  }
+
+  public areSomeFilterEntriesEnabled(filterEntries: FilterEntry[]): boolean {
+    if (!filterEntries?.length || !this.flowFilters.length) return false;
+    return filterEntries.some(fe =>
+      this.flowFilters.some(ff => ff.toString() === fe.toString()),
+    );
   }
 
   public setShowHost(val: boolean): boolean {
@@ -160,7 +172,7 @@ export default class ControlStore {
 
   public setFilters(f: Filters) {
     this.currentNamespace = f.namespace ?? null;
-    this.verdict = f.verdict ?? null;
+    this.verdict = [...(f.verdicts ?? [])][0] ?? null;
     this.httpStatus = f.httpStatus ?? null;
     this.flowFilters = f.filters || [];
     this.showHost = !f.skipHost;
@@ -195,14 +207,63 @@ export default class ControlStore {
   public get filters(): Filters {
     return Filters.fromObject({
       namespace: this.currentNamespace,
-      verdict: this.verdict,
+      verdicts: new Set(this.verdict ? [this.verdict] : []),
       httpStatus: this.httpStatus,
       filters: this.flowFilters,
       skipHost: !this.showHost,
       skipKubeDns: !this.showKubeDns,
       skipRemoteNode: !this.showRemoteNode,
       skipPrometheusApp: !this.showPrometheusApp,
-      skipKubeApiServer: !this.showKubeApiServer,
     });
   }
+
+  public get verdicts(): Set<Verdict> {
+    return this.verdict != null ? new Set([this.verdict]) : new Set();
+  }
+
+  public toggleVerdict(v: Verdict | null): Set<Verdict> {
+    if (v == null) {
+      this.verdict = null;
+    } else if (this.verdict === v) {
+      this.verdict = null;
+    } else {
+      this.verdict = v;
+    }
+    return this.verdicts;
+  }
+
+  public setVerdicts(vs: Set<Verdict>): void {
+    this.verdict = vs.size > 0 ? [...vs][0] : null;
+  }
+
+  public get filteredFlowFilters(): FilterEntry[] {
+    return this.correctFlowFilters;
+  }
+
+  public get activeVerdict(): Verdict | null {
+    return this.verdict;
+  }
+
+  public resetUserSelected(): void {
+    this.selectedTableFlow = null;
+  }
+
+  private _currentApp: Application = Application.ServiceMap;
+
+  public get currentApp(): Application {
+    return this._currentApp;
+  }
+
+  public get app(): { isServiceMap: boolean } {
+    return { isServiceMap: this._currentApp === Application.ServiceMap };
+  }
+
+  public setCurrentApp(app: Application): [Application, boolean] {
+    const prev = this._currentApp;
+    const isChanged = prev !== app;
+    this._currentApp = app;
+    return [prev, isChanged];
+  }
 }
+
+export { ControlStore };

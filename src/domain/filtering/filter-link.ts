@@ -8,7 +8,7 @@ import {
 import { Filters } from '~/domain/filtering';
 
 export const filterLink = (link: Link, filters: Filters): boolean => {
-  if (filters.verdict != null && !link.verdicts.has(filters.verdict)) {
+  if (filters.verdicts?.size && ![...filters.verdicts].some(v => link.verdicts.has(v))) {
     return false;
   }
 

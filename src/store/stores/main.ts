@@ -1,12 +1,13 @@
 import { autorun, configure, makeAutoObservable, reaction, toJS } from 'mobx';
 
 import { Flow } from '~/domain/flows';
-import { FilterEntry, Filters } from '~/domain/filtering';
+import { FilterEntry, Filters, FiltersDiff } from '~/domain/filtering';
 
 import { Service } from '~/domain/service-map';
 import { setupDebugProp, StateChange } from '~/domain/misc';
 import { HubbleFlow, HubbleLink, HubbleService } from '~/domain/hubble';
 import { FeatureFlags } from '~/domain/features';
+import { NamespaceDescriptor } from '~/domain/namespaces';
 
 import {
   ServiceMapArrowStrategy,
@@ -16,6 +17,7 @@ import {
 import RouteStore, { RouteHistorySourceKind } from './route';
 import ControlStore from './controls';
 import FeaturesStore from './features';
+import { NamespaceStore } from '~/store/stores/namespace';
 
 import { EventKind as FrameEvent, StoreFrame } from '~/store/frame';
 import * as storage from '~/storage/local';
@@ -48,6 +50,8 @@ export class Store {
 
   public features: FeaturesStore;
 
+  public filtersDiff: FiltersDiff;
+
   private afterResetCallbacks: Array<() => void> = [];
 
   constructor(props: Props) {
@@ -57,8 +61,8 @@ export class Store {
     this.route = new RouteStore(props.historySource);
     this.features = new FeaturesStore();
 
-    this.globalFrame = StoreFrame.emptyWithShared(this.controls);
-    this.currentFrame = StoreFrame.emptyWithShared(this.controls);
+    this.globalFrame = StoreFrame.emptyWithShared(this.controls, new NamespaceStore());
+    this.currentFrame = StoreFrame.emptyWithShared(this.controls, new NamespaceStore());
 
     this.placement = new ServiceMapPlacementStrategy(this.currentFrame);
     this.arrows = new ServiceMapArrowStrategy(
@@ -74,6 +78,8 @@ export class Store {
     this.setupEventHandlers();
     this.setupReactions();
     this.setupDebugTools();
+
+    this.filtersDiff = FiltersDiff.fromFilters(Filters.default());
   }
 
   setup({
@@ -91,19 +97,21 @@ export class Store {
     this.currentFrame.interactions.setHubbleFlows(flows, { sort: true });
   }
 
-  setNamespaces(nss: Array<string>) {
+  setNamespaces(nss: string[]) {
     const projects = Projects.getInstance().getProjects();
     if (projects === null) return;
 
-    this.controls.namespaces = projects;
+    const filtered = nss.filter(ns => projects.includes(ns));
+    this.controls.namespaces = filtered;
+    this.currentFrame.namespaces.addRelayNamespaces(filtered);
 
-    if (!this.route.namespace && projects.length > 0) {
-      this.controls.setCurrentNamespace(projects[0]);
+    if (!this.route.namespace && filtered.length > 0) {
+      this.controls.setCurrentNamespace(filtered[0]);
     }
   }
 
-  resetCurrentFrame(filters: Filters) {
-    this.currentFrame.flush();
+  resetCurrentFrame(filters: Filters, opts?: { preserveActiveCards?: boolean }) {
+    this.currentFrame.flush({ preserveActiveCards: opts?.preserveActiveCards });
     this.placement.reset();
     this.arrows.reset();
     this.currentFrame.applyFrame(this.globalFrame, filters);
@@ -112,20 +120,29 @@ export class Store {
   }
 
   applyServiceChange(svc: Service, change: StateChange) {
-    this.currentFrame.applyServiceChange(svc, change);
+    this.currentFrame.applyServiceChange({ service: svc as HubbleService, change });
   }
 
   applyServiceLinkChange(hubbleLink: HubbleLink, change: StateChange) {
-    this.currentFrame.applyServiceLinkChange(hubbleLink, change);
+    this.currentFrame.applyServiceLinkChanges([{ serviceLink: hubbleLink, change }]);
   }
 
-  applyNamespaceChange(ns: string, change: StateChange) {
+  applyNamespaceChange(nsDescriptor: NamespaceDescriptor, change?: StateChange) {
+    const ns = nsDescriptor.namespace;
     if (change === StateChange.Deleted) {
       this.controls.removeNamespace(ns);
+      this.currentFrame.namespaces.set({ namespace: ns, relay: false });
+      return;
+    }
+
+    // Multi-tenancy: only allow namespaces that are in the user's projects
+    const projects = Projects.getInstance().getProjects();
+    if (projects !== null && !projects.includes(ns)) {
       return;
     }
 
     this.controls.addNamespace(ns);
+    this.currentFrame.namespaces.set(nsDescriptor);
   }
 
   addFlows(flows: Flow[]) {
@@ -153,6 +170,26 @@ export class Store {
     return this.controls.filters;
   }
 
+  public get namespaces(): NamespaceStore {
+    return this.currentFrame.namespaces;
+  }
+
+  public get availableNamespaces(): NamespaceDescriptor[] {
+    const projects = Projects.getInstance().getProjects();
+    if (!projects) return [];
+    return this.namespaces.combinedNamespaces.filter(ns =>
+      projects.includes(ns.namespace),
+    );
+  }
+
+  public get currentNamespace(): NamespaceDescriptor | null {
+    return this.namespaces.current;
+  }
+
+  public get uiSettings(): { isFeaturesSet: boolean } {
+    return { isFeaturesSet: this.features.isSet };
+  }
+
   public flush(opts?: FlushOptions) {
     this.controls.selectTableFlow(null);
 
@@ -175,16 +212,18 @@ export class Store {
       this.globalFrame.addFlows(flows);
     });
 
-    this.currentFrame.on(FrameEvent.LinkChanged, (link, change) => {
-      if (wrongChanges.includes(change)) return;
-
-      this.globalFrame.applyServiceLinkChange(link, change);
+    this.currentFrame.on(FrameEvent.LinksChanged, links => {
+      const validLinks = links.filter(l => !wrongChanges.includes(l.change));
+      if (validLinks.length > 0) {
+        this.globalFrame.applyServiceLinkChanges(validLinks);
+      }
     });
 
-    this.currentFrame.on(FrameEvent.ServiceChange, (svc, change) => {
-      if (wrongChanges.includes(change)) return;
-
-      this.globalFrame.applyServiceChange(svc, change);
+    this.currentFrame.on(FrameEvent.ServiceChange, changes => {
+      const validChanges = changes.filter(ch => !wrongChanges.includes(ch.change));
+      if (validChanges.length > 0) {
+        this.globalFrame.applyServiceChanges(validChanges);
+      }
     });
   }
 

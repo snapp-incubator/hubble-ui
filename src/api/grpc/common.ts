@@ -16,7 +16,7 @@ export const baseWhitelistFilter = (filters?: Filters): FlowFilter => {
     // Filter by http status code allows only l7 event type
     eventTypes.push(CiliumEventTypes.L7);
     wlFilter.addHttpStatusCode(filters.httpStatus);
-  } else if (filters?.verdict === Verdict.Audit) {
+  } else if (filters?.verdicts?.has(Verdict.Audit)) {
     eventTypes.push(CiliumEventTypes.PolicyVerdict);
   } else {
     eventTypes.push(
@@ -34,9 +34,9 @@ export const baseWhitelistFilter = (filters?: Filters): FlowFilter => {
     wlFilter.addEventType(eventTypeFilter);
   });
 
-  if (filters?.verdict) {
-    wlFilter.addVerdict(helpers.verdict.verdictToPb(filters.verdict));
-  }
+  filters?.verdicts?.forEach(v => {
+    wlFilter.addVerdict(helpers.verdict.verdictToPb(v));
+  });
 
   // TODO: code for handling tcp flags should be here
   // NOTE: 1.9.1 gets rid of that field, wait for the next release

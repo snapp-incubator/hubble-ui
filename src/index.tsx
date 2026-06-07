@@ -1,25 +1,21 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { observer } from 'mobx-react-lite';
 
-import { StoreProvider, useStore } from '~/store';
+import { Store } from '~/store';
 import { RouteHistorySourceKind } from '~/store/stores/route';
-import { Notifier, NotifierProvider } from '~/notifier';
+import { Application, ApplicationProvider } from '~/application';
+import { DataLayer } from '~/data-layer/data-layer';
+import { UILayer } from '~/ui-layer/ui-layer';
+import { Router } from '~/router/router';
+import { RouterProvider } from '~/router/Provider';
+import { Environment } from '~/environment';
 
-import { DataManagerProvider } from '~/data-manager';
-import { useHooksOnDataManager } from './data-manager/Provider';
-
-import { FeatureFlagsFetcher } from './components/FeatureFlags/FeatureFlagsFetcher';
-import { App } from './components/App';
-
-import * as ui from '~/ui';
-import api from '~/api';
+import { FeatureFlags } from '~/domain/features';
+import { getAuthToken, getAuthClaims } from '~/utils/cookie';
+import { Projects } from '~/utils/projects';
 
 import './blueprint.scss';
 import './index.scss';
-import { getAuthClaims, getAuthToken } from '~/utils/cookie';
-import { Projects } from '~/utils/projects';
 
 declare global {
   interface Window {
@@ -27,65 +23,74 @@ declare global {
   }
 }
 
+const getApiBaseUrl = (): string => {
+  const apiPath = process.env.API_PATH ?? '/api';
+  if (process.env.API_SCHEMA && process.env.API_HOST && process.env.API_PORT) {
+    return `${process.env.API_SCHEMA}://${process.env.API_HOST}:${process.env.API_PORT}${apiPath}`;
+  }
+  return `${window.location.origin}${apiPath}`;
+};
+
 const run = async () => {
-  const auth = `${window.location.origin}/api/`;
+  const authUrl = `${window.location.origin}/api/`;
   const token = getAuthToken();
+
   if (token === null) {
-    window.location.replace(auth);
+    window.location.replace(authUrl);
     return;
   }
 
   const jwtPayload = getAuthClaims(token);
-  if (
-    jwtPayload === null ||
-    (jwtPayload.exp !== undefined && jwtPayload.exp < Date.now() / 1000)
-  ) {
-    window.location.replace(`${window.location.origin}/api/`);
+  if (jwtPayload === null || (jwtPayload.exp !== 0 && jwtPayload.exp < Date.now() / 1000)) {
+    window.location.replace(authUrl);
     return;
   }
 
-  await Projects.getInstance().setProjects(token);
+  try {
+    await Projects.getInstance().setProjects(token);
+  } catch (err) {
+    console.error('Failed to fetch projects:', err);
+    window.location.replace(authUrl);
+    return;
+  }
 
-  ui.setCSSVars(ui.sizes);
+  const store = new Store({ historySource: RouteHistorySourceKind.URL });
+  const env = Environment.new();
 
-  const Screen = observer(() => {
-    const store = useStore();
-
-    useHooksOnDataManager();
-
-    return (
-      <BrowserRouter>
-        <Routes location={store.route.location}>
-          <Route path="*" element={<App api={api} />} />
-        </Routes>
-      </BrowserRouter>
-    );
+  const dataLayer = DataLayer.new({
+    store,
+    customProtocolBaseURL: getApiBaseUrl(),
+    customProtocolRequestTimeout: 30000,
+    customProtocolMessagesInJSON: false,
+    customProtocolCORSEnabled: false,
   });
 
-  // NOTE: we don't have another option to take notifier from except from inside
-  const onFeatureFetchError = (err: Error, notifier: Notifier) => {
-    console.error('features fetch error: ', err);
-    notifier.showError(`Failed to load UI settings: ${err.message}`);
-  };
+  const router = new Router(dataLayer);
 
-  const elems = (
-    <NotifierProvider>
-      <StoreProvider historySource={RouteHistorySourceKind.URL}>
-        <DataManagerProvider api={api}>
-          <FeatureFlagsFetcher api={api.v1} onError={onFeatureFetchError}>
-            <Screen />
-          </FeatureFlagsFetcher>
-        </DataManagerProvider>
-      </StoreProvider>
-    </NotifierProvider>
-  );
+  const uiLayer = UILayer.new({
+    router,
+    store,
+    dataLayer,
+    isCSSVarsInjectionEnabled: true,
+  });
 
   const container = document.getElementById('app');
   if (!container) throw new Error('Expect #app in DOM');
   const root = createRoot(container);
 
-  root.render(elems);
+  const renderFn = (_elem: Element, app: Application) => {
+    root.render(
+      <ApplicationProvider app={app}>
+        <RouterProvider router={router} />
+      </ApplicationProvider>,
+    );
+  };
+
+  const app = new Application(env, router, store, dataLayer, uiLayer, renderFn);
+  app.mount(container);
+
+  // Trigger feature flags so UILayer.setupEverything() can proceed
+  dataLayer.setFeatureFlags(FeatureFlags.default());
 };
 
-// TODO: run() if only we are running not as library
 run();
