@@ -1,5 +1,5 @@
 import { Checkbox, Menu, MenuItem, Popover } from '@blueprintjs/core';
-import React, { memo } from 'react';
+import React from 'react';
 import classnames from 'classnames';
 
 import { usePopover } from '~/ui/hooks/usePopover';
@@ -8,6 +8,7 @@ import { VisualFiltersIcon } from '~/components/Icons/VisualFiltersIcon';
 import { FilterIcon } from './FilterIcon';
 
 import css from './styles.scss';
+import { observer } from 'mobx-react';
 
 interface Props {
   showHost: boolean;
@@ -18,30 +19,23 @@ interface Props {
   onShowRemoteNodeToggle?: () => void;
   showPrometheusApp: boolean;
   onShowPrometheusAppToggle?: () => void;
-  showKubeApiServer: boolean;
-  onShowKubeApiServerToggle?: () => void;
 }
 
-export const VisualFiltersDropdown = memo<Props>(function VisualFiltersDropdown(
-  props,
-) {
+export const VisualFiltersDropdown = observer(function VisualFiltersDropdown(props: Props) {
   const popover = usePopover();
   const enabled =
-    !props.showHost ||
-    !props.showKubeDns ||
-    !props.showRemoteNode ||
-    !props.showPrometheusApp ||
-    !props.showKubeApiServer;
+    !props.showHost || !props.showKubeDns || !props.showRemoteNode || !props.showPrometheusApp;
 
   const content = (
-    <Menu>
+    <Menu className={css.visualFiltersMenu}>
       <MenuItem
         shouldDismissPopover={false}
         text={
           <Checkbox
             checked={!props.showHost}
             label="Hide host service"
-            onChange={props.onShowHostToggle}
+            onClick={props.onShowHostToggle}
+            className={css.checkbox}
           />
         }
       />
@@ -51,17 +45,8 @@ export const VisualFiltersDropdown = memo<Props>(function VisualFiltersDropdown(
           <Checkbox
             checked={!props.showKubeDns}
             label="Hide kube-dns:53 pod"
-            onChange={props.onShowKubeDnsToggle}
-          />
-        }
-      />
-      <MenuItem
-        shouldDismissPopover={false}
-        text={
-          <Checkbox
-            checked={!props.showKubeApiServer}
-            label="Hide kube-apiserver"
-            onChange={props.onShowKubeApiServerToggle}
+            onClick={props.onShowKubeDnsToggle}
+            className={css.checkbox}
           />
         }
       />
@@ -71,7 +56,8 @@ export const VisualFiltersDropdown = memo<Props>(function VisualFiltersDropdown(
           <Checkbox
             checked={!props.showRemoteNode}
             label="Hide remote node"
-            onChange={props.onShowRemoteNodeToggle}
+            onClick={props.onShowRemoteNodeToggle}
+            className={css.checkbox}
           />
         }
       />
@@ -81,7 +67,8 @@ export const VisualFiltersDropdown = memo<Props>(function VisualFiltersDropdown(
           <Checkbox
             checked={!props.showPrometheusApp}
             label="Hide prometheus app"
-            onChange={props.onShowPrometheusAppToggle}
+            onClick={props.onShowPrometheusAppToggle}
+            className={css.checkbox}
           />
         }
       />

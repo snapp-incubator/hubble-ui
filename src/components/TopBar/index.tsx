@@ -12,9 +12,9 @@ import { VerdictFilterDropdown } from './VerdictFilterDropdown';
 import { VisualFiltersDropdown } from './VisualFiltersDropdown';
 import { NamespaceSelectorDropdown } from './NamespaceSelectorDropdown';
 import { ConnectionIndicator } from './ConnectionIndicator';
+import Logout from './Logout';
 
 import css from './styles.scss';
-import Logout from '~/components/TopBar/Logout';
 
 export interface Props {
   transferState: TransferState;
@@ -73,6 +73,7 @@ export const TopBar = observer(function TopBar(props: Props) {
         {props.currentNamespace && RenderedFilters}
       </div>
       <div className={css.right}>
+        <div className={css.spacer} />
         <div className={css.spacer} />
 
         <ConnectionIndicator transferState={props.transferState} />

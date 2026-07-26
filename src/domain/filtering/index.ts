@@ -65,7 +65,7 @@ export const filter = (
     let checkIncomings = checkOutgoings;
 
     filters.filters?.forEach(filterEntry => {
-      if (!filterServiceByEntry(card, filterEntry)) return;
+      if (!filterServiceByEntry(card.service, filterEntry, card)) return;
 
       checkOutgoings = checkOutgoings || filterEntry.fromRequired;
       checkIncomings = checkIncomings || filterEntry.toRequired;

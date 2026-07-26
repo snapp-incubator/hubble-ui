@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 
 import { NamespaceDescriptor } from '~/domain/namespaces';
+import { Projects } from '~/utils/projects';
 
 export class NamespaceStore {
   // private _seenNamespaces: Map<string, boolean> = new Map();
@@ -29,11 +30,15 @@ export class NamespaceStore {
   }
 
   public setCurrent(ns?: string | null): boolean {
+    if (ns != null && !NamespaceStore.isAuthorized(ns)) return this.current != null;
+
     this._currentNamespace = ns ?? null;
     return this.current != null;
   }
 
   public set(ns: NamespaceDescriptor, isCurrent?: boolean): void {
+    if (!NamespaceStore.isAuthorized(ns.namespace)) return;
+
     if (ns.relay) {
       this._relayNamespaces.set(ns.namespace, ns);
     }
@@ -102,6 +107,14 @@ export class NamespaceStore {
 
   public get isSet(): boolean {
     return this.current != null;
+  }
+
+  // Multi-tenancy: a namespace is visible only if it belongs to the list of
+  // the user's authorized projects. When the projects list is not initialized
+  // (e.g. in tests or mock mode), no restriction is applied.
+  private static isAuthorized(ns: string): boolean {
+    const projects = Projects.getInstance().getProjects();
+    return projects == null || projects.includes(ns);
   }
 }
 
