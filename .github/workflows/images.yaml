@@ -51,7 +51,9 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          # NOTE: On pull_request_target github.sha points to the base branch,
+          # so PR builds must check out the PR head explicitly
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       # Master branch & tag builds
       - name: CI Build ${{ matrix.name }}
