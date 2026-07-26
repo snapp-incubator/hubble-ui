@@ -12,6 +12,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-push-prs:
     if: ${{ github.repository == 'snapp-incubator/hubble-ui' }}
