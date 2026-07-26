@@ -27,6 +27,12 @@ func main() {
 		TLSToRelayClientKeyFile:  config.StrOr("TLS_RELAY_CLIENT_KEY_FILE", ""),
 		E2ETestModeEnabled:       config.BoolOr("E2E_TEST_MODE", false),
 		E2ELogfilesBasepath:      config.StrOr("E2E_LOGFILES_BASEPATH", ""),
+		DexEnabled:               config.BoolOr("DEX_ENABLED", false),
+		DexAddr:                  config.Str("DEX_ADDR"),
+		DexHubbleURL:             config.Str("DEX_HUBBLE_URL"),
+		DexClientID:              config.Str("DEX_CLIENT_ID"),
+		DexSecret:                config.Str("DEX_CLIENT_SECRET"),
+		DexJWTExpiration:         config.DurationOr("DEX_JWT_EXPIRATION", 24*time.Hour),
 	}).Build()
 
 	if err != nil {

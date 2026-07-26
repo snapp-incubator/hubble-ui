@@ -23,6 +23,12 @@ type PropGetters struct {
 	ClientPollDelays         []time.Duration
 	E2ETestModeEnabled       EnvVarGetter[bool]
 	E2ELogfilesBasepath      EnvVarGetter[string]
+	DexEnabled               EnvVarGetter[bool]
+	DexAddr                  EnvVarGetter[string]
+	DexHubbleURL             EnvVarGetter[string]
+	DexClientID              EnvVarGetter[string]
+	DexSecret                EnvVarGetter[string]
+	DexJWTExpiration         EnvVarGetter[time.Duration]
 }
 
 type EnvVarGetter[T any] func() EnvVarResult[T]

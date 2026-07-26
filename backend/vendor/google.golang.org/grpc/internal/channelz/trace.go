@@ -79,7 +79,6 @@ type TraceEvent struct {
 	Parent   *TraceEvent
 }
 
-<<<<<<< HEAD
 // ChannelTrace provides tracing information for a channel.
 // It tracks various events and metadata related to the channel's lifecycle
 // and operations.
@@ -95,15 +94,6 @@ type ChannelTrace struct {
 	// A slice of traceEvent pointers representing the events recorded for
 	// this channel.
 	Events []*traceEvent
-=======
-type ChannelTrace struct {
-	cm           *channelMap
-	clearCalled  bool
-	CreationTime time.Time
-	EventNum     int64
-	mu           sync.Mutex
-	Events       []*traceEvent
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }
 
 func (c *ChannelTrace) copy() *ChannelTrace {
@@ -193,10 +183,7 @@ var refChannelTypeToString = map[RefChannelType]string{
 	RefNormalSocket: "NormalSocket",
 }
 
-<<<<<<< HEAD
 // String returns a string representation of the RefChannelType
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (r RefChannelType) String() string {
 	return refChannelTypeToString[r]
 }

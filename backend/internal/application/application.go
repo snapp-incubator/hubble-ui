@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os/signal"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/cilium/hubble-ui/backend/internal/apiserver"
 	"github.com/cilium/hubble-ui/backend/internal/config"
 	"github.com/cilium/hubble-ui/backend/internal/e2e"
+	"github.com/cilium/hubble-ui/backend/internal/server/middleware"
 )
 
 type Application struct {
@@ -82,6 +84,28 @@ func (app *Application) Run() error {
 	handlerMiddleware := app.e2e.HandlerMiddleware
 	if !app.cfg.E2ETestMode {
 		handlerMiddleware = nil
+	}
+
+	if app.cfg.DexEnabled {
+		dexHandler := middleware.NewDex(
+			app.log.With(slog.String("component", "DexAuthHandler")),
+			middleware.Config{
+				Addr:          app.cfg.DexAddr,
+				HubbleURL:     app.cfg.DexHubbleURL,
+				ClientID:      app.cfg.DexClientID,
+				Secret:        app.cfg.DexSecret,
+				JWTExpiration: app.cfg.DexJWTExpiration,
+			},
+		)
+
+		innerMiddleware := handlerMiddleware
+		handlerMiddleware = func(next http.Handler) http.Handler {
+			if innerMiddleware != nil {
+				next = innerMiddleware(next)
+			}
+
+			return dexHandler.Middleware(next)
+		}
 	}
 
 	srv, err := apiserver.New(

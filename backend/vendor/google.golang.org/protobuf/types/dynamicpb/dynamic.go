@@ -294,11 +294,7 @@ func (m *Message) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	case fd.IsMap():
 		return protoreflect.ValueOfMap(&dynamicMap{
 			desc: fd,
-<<<<<<< HEAD
 			mapv: make(map[any]protoreflect.Value),
-=======
-			mapv: make(map[interface{}]protoreflect.Value),
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		})
 	case fd.IsList():
 		return protoreflect.ValueOfList(&dynamicList{desc: fd})
@@ -454,11 +450,7 @@ func (x *dynamicList) IsValid() bool {
 
 type dynamicMap struct {
 	desc protoreflect.FieldDescriptor
-<<<<<<< HEAD
 	mapv map[any]protoreflect.Value
-=======
-	mapv map[interface{}]protoreflect.Value
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 }
 
 func (x *dynamicMap) Get(k protoreflect.MapKey) protoreflect.Value { return x.mapv[k.Interface()] }
@@ -642,19 +634,11 @@ func newListEntry(fd protoreflect.FieldDescriptor) protoreflect.Value {
 //
 // The InterfaceOf and ValueOf methods of the extension type are defined as:
 //
-<<<<<<< HEAD
 //	func (xt extensionType) ValueOf(iv any) protoreflect.Value {
 //		return protoreflect.ValueOf(iv)
 //	}
 //
 //	func (xt extensionType) InterfaceOf(v protoreflect.Value) any {
-=======
-//	func (xt extensionType) ValueOf(iv interface{}) protoreflect.Value {
-//		return protoreflect.ValueOf(iv)
-//	}
-//
-//	func (xt extensionType) InterfaceOf(v protoreflect.Value) interface{} {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 //		return v.Interface()
 //	}
 //
@@ -674,11 +658,7 @@ func (xt extensionType) New() protoreflect.Value {
 	case xt.desc.IsMap():
 		return protoreflect.ValueOfMap(&dynamicMap{
 			desc: xt.desc,
-<<<<<<< HEAD
 			mapv: make(map[any]protoreflect.Value),
-=======
-			mapv: make(map[interface{}]protoreflect.Value),
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		})
 	case xt.desc.IsList():
 		return protoreflect.ValueOfList(&dynamicList{desc: xt.desc})
@@ -706,30 +686,18 @@ func (xt extensionType) TypeDescriptor() protoreflect.ExtensionTypeDescriptor {
 	return xt.desc
 }
 
-<<<<<<< HEAD
 func (xt extensionType) ValueOf(iv any) protoreflect.Value {
-=======
-func (xt extensionType) ValueOf(iv interface{}) protoreflect.Value {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	v := protoreflect.ValueOf(iv)
 	typecheck(xt.desc, v)
 	return v
 }
 
-<<<<<<< HEAD
 func (xt extensionType) InterfaceOf(v protoreflect.Value) any {
-=======
-func (xt extensionType) InterfaceOf(v protoreflect.Value) interface{} {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	typecheck(xt.desc, v)
 	return v.Interface()
 }
 
-<<<<<<< HEAD
 func (xt extensionType) IsValidInterface(iv any) bool {
-=======
-func (xt extensionType) IsValidInterface(iv interface{}) bool {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	return typeIsValid(xt.desc, protoreflect.ValueOf(iv)) == nil
 }
 

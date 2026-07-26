@@ -26,10 +26,7 @@ import (
 	"google.golang.org/grpc/internal/channelz"
 	"google.golang.org/grpc/internal/grpcsync"
 	"google.golang.org/grpc/internal/pretty"
-<<<<<<< HEAD
 	"google.golang.org/grpc/internal/resolver/delegatingresolver"
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/serviceconfig"
 )
@@ -70,11 +67,7 @@ func newCCResolverWrapper(cc *ClientConn) *ccResolverWrapper {
 // any newly created ccResolverWrapper, except that close may be called instead.
 func (ccr *ccResolverWrapper) start() error {
 	errCh := make(chan error)
-<<<<<<< HEAD
 	ccr.serializer.TrySchedule(func(ctx context.Context) {
-=======
-	ccr.serializer.Schedule(func(ctx context.Context) {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		if ctx.Err() != nil {
 			errCh <- ctx.Err()
 			return
@@ -85,7 +78,6 @@ func (ccr *ccResolverWrapper) start() error {
 			CredsBundle:          ccr.cc.dopts.copts.CredsBundle,
 			Dialer:               ccr.cc.dopts.copts.Dialer,
 			Authority:            ccr.cc.authority,
-<<<<<<< HEAD
 			MetricsRecorder:      ccr.cc.metricsRecorderList,
 		}
 		var err error
@@ -99,22 +91,13 @@ func (ccr *ccResolverWrapper) start() error {
 		} else {
 			ccr.resolver, err = delegatingresolver.New(ccr.cc.parsedTarget, ccr, opts, ccr.cc.resolverBuilder, ccr.cc.dopts.enableLocalDNSResolution)
 		}
-=======
-		}
-		var err error
-		ccr.resolver, err = ccr.cc.resolverBuilder.Build(ccr.cc.parsedTarget, ccr, opts)
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		errCh <- err
 	})
 	return <-errCh
 }
 
 func (ccr *ccResolverWrapper) resolveNow(o resolver.ResolveNowOptions) {
-<<<<<<< HEAD
 	ccr.serializer.TrySchedule(func(ctx context.Context) {
-=======
-	ccr.serializer.Schedule(func(ctx context.Context) {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		if ctx.Err() != nil || ccr.resolver == nil {
 			return
 		}
@@ -131,11 +114,7 @@ func (ccr *ccResolverWrapper) close() {
 	ccr.closed = true
 	ccr.mu.Unlock()
 
-<<<<<<< HEAD
 	ccr.serializer.TrySchedule(func(context.Context) {
-=======
-	ccr.serializer.Schedule(func(context.Context) {
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 		if ccr.resolver == nil {
 			return
 		}
@@ -156,16 +135,7 @@ func (ccr *ccResolverWrapper) UpdateState(s resolver.State) error {
 		return nil
 	}
 	if s.Endpoints == nil {
-<<<<<<< HEAD
 		s.Endpoints = addressesToEndpoints(s.Addresses)
-=======
-		s.Endpoints = make([]resolver.Endpoint, 0, len(s.Addresses))
-		for _, a := range s.Addresses {
-			ep := resolver.Endpoint{Addresses: []resolver.Address{a}, Attributes: a.BalancerAttributes}
-			ep.Addresses[0].BalancerAttributes = nil
-			s.Endpoints = append(s.Endpoints, ep)
-		}
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	}
 	ccr.addChannelzTraceEvent(s)
 	ccr.curState = s
@@ -198,15 +168,11 @@ func (ccr *ccResolverWrapper) NewAddress(addrs []resolver.Address) {
 		ccr.cc.mu.Unlock()
 		return
 	}
-<<<<<<< HEAD
 	s := resolver.State{
 		Addresses:     addrs,
 		ServiceConfig: ccr.curState.ServiceConfig,
 		Endpoints:     addressesToEndpoints(addrs),
 	}
-=======
-	s := resolver.State{Addresses: addrs, ServiceConfig: ccr.curState.ServiceConfig}
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	ccr.addChannelzTraceEvent(s)
 	ccr.curState = s
 	ccr.mu.Unlock()
@@ -222,12 +188,9 @@ func (ccr *ccResolverWrapper) ParseServiceConfig(scJSON string) *serviceconfig.P
 // addChannelzTraceEvent adds a channelz trace event containing the new
 // state received from resolver implementations.
 func (ccr *ccResolverWrapper) addChannelzTraceEvent(s resolver.State) {
-<<<<<<< HEAD
 	if !logger.V(0) && !channelz.IsOn() {
 		return
 	}
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	var updates []string
 	var oldSC, newSC *ServiceConfig
 	var oldOK, newOK bool
@@ -247,7 +210,6 @@ func (ccr *ccResolverWrapper) addChannelzTraceEvent(s resolver.State) {
 	}
 	channelz.Infof(logger, ccr.cc.channelz, "Resolver state updated: %s (%v)", pretty.ToJSON(s), strings.Join(updates, "; "))
 }
-<<<<<<< HEAD
 
 func addressesToEndpoints(addrs []resolver.Address) []resolver.Endpoint {
 	endpoints := make([]resolver.Endpoint, 0, len(addrs))
@@ -258,5 +220,3 @@ func addressesToEndpoints(addrs []resolver.Address) []resolver.Endpoint {
 	}
 	return endpoints
 }
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)

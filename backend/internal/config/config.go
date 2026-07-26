@@ -46,6 +46,15 @@ type Config struct {
 	TLSRelayClientCertFile string
 	TLSRelayClientKeyFile  string
 
+	// Dex (OIDC) authentication settings for multi-tenant deployments.
+	// When DexEnabled is false the API is served without authentication.
+	DexEnabled       bool
+	DexAddr          string
+	DexHubbleURL     string
+	DexClientID      string
+	DexSecret        string
+	DexJWTExpiration time.Duration
+
 	relayClientConfig certloader.ClientConfigBuilder
 }
 

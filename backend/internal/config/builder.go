@@ -44,7 +44,62 @@ func (b *ConfigBuilder) Build() (*Config, error) {
 		return nil, err
 	}
 
+	if err := b.initDex(cfg); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
+}
+
+func (b *ConfigBuilder) initDex(cfg *Config) error {
+	isEnabled := b.props.DexEnabled()
+	if err := isEnabled.Err(); err != nil {
+		return err
+	}
+
+	isEnabled.LogIfFallback(b.logger)
+	cfg.DexEnabled = isEnabled.Value
+
+	if !isEnabled.Value {
+		return nil
+	}
+
+	addr := b.props.DexAddr()
+	if err := addr.Err(); err != nil {
+		return err
+	}
+
+	hubbleURL := b.props.DexHubbleURL()
+	if err := hubbleURL.Err(); err != nil {
+		return err
+	}
+
+	clientID := b.props.DexClientID()
+	if err := clientID.Err(); err != nil {
+		return err
+	}
+
+	secret := b.props.DexSecret()
+	if err := secret.Err(); err != nil {
+		return err
+	}
+
+	jwtExpiration := b.props.DexJWTExpiration()
+	if err := jwtExpiration.Err(); err != nil {
+		return err
+	}
+
+	jwtExpiration.LogIfFallback(b.logger)
+
+	cfg.DexAddr = addr.Value
+	cfg.DexHubbleURL = hubbleURL.Value
+	cfg.DexClientID = clientID.Value
+	cfg.DexSecret = secret.Value
+	cfg.DexJWTExpiration = jwtExpiration.Value
+
+	b.logger.Info("dex authentication is enabled", "issuer", addr.Value)
+
+	return nil
 }
 
 func (b *ConfigBuilder) initLogger() error {

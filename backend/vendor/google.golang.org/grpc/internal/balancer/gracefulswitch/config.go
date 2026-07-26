@@ -33,11 +33,8 @@ type lbConfig struct {
 	childConfig  serviceconfig.LoadBalancingConfig
 }
 
-<<<<<<< HEAD
 // ChildName returns the name of the child balancer of the gracefulswitch
 // Balancer.
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func ChildName(l serviceconfig.LoadBalancingConfig) string {
 	return l.(*lbConfig).childBuilder.Name()
 }
