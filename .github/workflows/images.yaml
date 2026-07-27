@@ -122,6 +122,10 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           path: image-digest/
+          # NOTE: buildx also uploads *.dockerbuild build-record artifacts;
+          # only the digest artifacts are wanted here
+          pattern: image-digest *
+          merge-multiple: true
 
       - name: Image Digests Output
         run: |
