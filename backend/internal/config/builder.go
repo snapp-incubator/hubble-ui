@@ -52,21 +52,17 @@ func (b *ConfigBuilder) Build() (*Config, error) {
 }
 
 func (b *ConfigBuilder) initDex(cfg *Config) error {
-	isEnabled := b.props.DexEnabled()
-	if err := isEnabled.Err(); err != nil {
-		return err
-	}
-
-	isEnabled.LogIfFallback(b.logger)
-	cfg.DexEnabled = isEnabled.Value
-
-	if !isEnabled.Value {
-		return nil
-	}
-
+	// NOTE: Dex authentication is enabled by the presence of the Dex issuer
+	// address; without it the backend serves the API unauthenticated, exactly
+	// like upstream
 	addr := b.props.DexAddr()
 	if err := addr.Err(); err != nil {
 		return err
+	}
+
+	cfg.DexEnabled = addr.Value != ""
+	if !cfg.DexEnabled {
+		return nil
 	}
 
 	hubbleURL := b.props.DexHubbleURL()
