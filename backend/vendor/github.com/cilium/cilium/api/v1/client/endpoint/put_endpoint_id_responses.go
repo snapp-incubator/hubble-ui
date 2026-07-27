@@ -10,6 +10,7 @@ package endpoint
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"io"
 
@@ -25,7 +26,7 @@ type PutEndpointIDReader struct {
 }
 
 // ReadResponse reads a server response into the received o.
-func (o *PutEndpointIDReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
+func (o *PutEndpointIDReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
 	switch response.Code() {
 	case 201:
 		result := NewPutEndpointIDCreated()
@@ -59,6 +60,12 @@ func (o *PutEndpointIDReader) ReadResponse(response runtime.ClientResponse, cons
 		return nil, result
 	case 500:
 		result := NewPutEndpointIDFailed()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 503:
+		result := NewPutEndpointIDServiceUnavailable()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -131,7 +138,7 @@ func (o *PutEndpointIDCreated) readResponse(response runtime.ClientResponse, con
 	o.Payload = new(models.Endpoint)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -199,7 +206,7 @@ func (o *PutEndpointIDInvalid) GetPayload() models.Error {
 func (o *PutEndpointIDInvalid) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -435,9 +442,65 @@ func (o *PutEndpointIDFailed) GetPayload() models.Error {
 func (o *PutEndpointIDFailed) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
+
+	return nil
+}
+
+// NewPutEndpointIDServiceUnavailable creates a PutEndpointIDServiceUnavailable with default headers values
+func NewPutEndpointIDServiceUnavailable() *PutEndpointIDServiceUnavailable {
+	return &PutEndpointIDServiceUnavailable{}
+}
+
+/*
+PutEndpointIDServiceUnavailable describes a response with status code 503, with default header values.
+
+Service Unavailable
+*/
+type PutEndpointIDServiceUnavailable struct {
+}
+
+// IsSuccess returns true when this put endpoint Id service unavailable response has a 2xx status code
+func (o *PutEndpointIDServiceUnavailable) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this put endpoint Id service unavailable response has a 3xx status code
+func (o *PutEndpointIDServiceUnavailable) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this put endpoint Id service unavailable response has a 4xx status code
+func (o *PutEndpointIDServiceUnavailable) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this put endpoint Id service unavailable response has a 5xx status code
+func (o *PutEndpointIDServiceUnavailable) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this put endpoint Id service unavailable response a status code equal to that given
+func (o *PutEndpointIDServiceUnavailable) IsCode(code int) bool {
+	return code == 503
+}
+
+// Code gets the status code for the put endpoint Id service unavailable response
+func (o *PutEndpointIDServiceUnavailable) Code() int {
+	return 503
+}
+
+func (o *PutEndpointIDServiceUnavailable) Error() string {
+	return fmt.Sprintf("[PUT /endpoint/{id}][%d] putEndpointIdServiceUnavailable", 503)
+}
+
+func (o *PutEndpointIDServiceUnavailable) String() string {
+	return fmt.Sprintf("[PUT /endpoint/{id}][%d] putEndpointIdServiceUnavailable", 503)
+}
+
+func (o *PutEndpointIDServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

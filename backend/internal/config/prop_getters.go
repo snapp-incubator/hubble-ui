@@ -2,11 +2,10 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 type PropGetters struct {
@@ -24,6 +23,11 @@ type PropGetters struct {
 	ClientPollDelays         []time.Duration
 	E2ETestModeEnabled       EnvVarGetter[bool]
 	E2ELogfilesBasepath      EnvVarGetter[string]
+	DexAddr                  EnvVarGetter[string]
+	DexHubbleURL             EnvVarGetter[string]
+	DexClientID              EnvVarGetter[string]
+	DexSecret                EnvVarGetter[string]
+	DexJWTExpiration         EnvVarGetter[time.Duration]
 }
 
 type EnvVarGetter[T any] func() EnvVarResult[T]
@@ -173,13 +177,12 @@ func (er *EnvVarResult[T]) Err() error {
 	return fmt.Errorf("env var '%s' is required, but is not set", er.VarName)
 }
 
-func (er *EnvVarResult[T]) LogIfFallback(log logrus.FieldLogger) {
+func (er *EnvVarResult[T]) LogIfFallback(log *slog.Logger) {
 	if er.IsRequired || er.IsPresented {
 		return
 	}
 
-	log.
-		WithField("var", er.VarName).
-		WithField("fallback", fmt.Sprintf("%v", er.Value)).
-		Info("using fallback value for env var")
+	log.Info("using fallback value for env var",
+		"var", er.VarName,
+		"fallback", fmt.Sprintf("%v", er.Value))
 }

@@ -36,6 +36,12 @@ export interface Flow {
      */
     uuid: string;
     /**
+     * emitter identifies the source that emitted the flow.
+     *
+     * @generated from protobuf field: flow.Emitter emitter = 41
+     */
+    emitter?: Emitter;
+    /**
      * @generated from protobuf field: flow.Verdict verdict = 2
      */
     verdict: Verdict;
@@ -72,6 +78,10 @@ export interface Flow {
      * @generated from protobuf field: flow.Layer4 l4 = 6
      */
     l4?: Layer4;
+    /**
+     * @generated from protobuf field: flow.Tunnel tunnel = 39
+     */
+    tunnel?: Tunnel;
     /**
      * @generated from protobuf field: flow.Endpoint source = 8
      */
@@ -174,6 +184,12 @@ export interface Flow {
      */
     file?: FileInfo;
     /**
+     * IPTraceID relates to the trace ID in the IP options of a packet.
+     *
+     * @generated from protobuf field: flow.IPTraceID ip_trace_id = 40
+     */
+    ipTraceId?: IPTraceID;
+    /**
      * only applicable to Verdict = DROPPED.
      *
      * @generated from protobuf field: flow.DropReason drop_reason_desc = 25
@@ -274,6 +290,44 @@ export interface Flow {
      * @generated from protobuf field: repeated flow.Policy ingress_denied_by = 21005
      */
     ingressDeniedBy: Policy[];
+    /**
+     * The set of Log values for policies that matched this flow.
+     * If no matched policies have an explicit log value configured,
+     * this list is empty. Duplicate values are elided; each
+     * entry is unique.
+     *
+     * @generated from protobuf field: repeated string policy_log = 21006
+     */
+    policyLog: string[];
+    /**
+     * Aggregate contains flow aggregation counters when flow aggregation is enabled.
+     * This field is only populated for aggregated flows.
+     *
+     * @generated from protobuf field: flow.Aggregate aggregate = 21007
+     */
+    aggregate?: Aggregate;
+}
+/**
+ * Emitter identifies the source that emits a Hubble flow.
+ *
+ * @generated from protobuf message flow.Emitter
+ */
+export interface Emitter {
+    /**
+     * name identifies the emitter.
+     * The name should be capitalized ("Hubble", not "hubble" nor "HUBBLE").
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * version identifiers the emitter version.
+     * The version should not contain a 'v' prefix as sometimes seen ("1.19.0",
+     * not "v1.19.0").
+     *
+     * @generated from protobuf field: string version = 2
+     */
+    version: string;
 }
 /**
  * @generated from protobuf message flow.FileInfo
@@ -328,6 +382,18 @@ export interface Layer4 {
          */
         sCTP: SCTP;
     } | {
+        oneofKind: "vRRP";
+        /**
+         * @generated from protobuf field: flow.VRRP VRRP = 6
+         */
+        vRRP: VRRP;
+    } | {
+        oneofKind: "iGMP";
+        /**
+         * @generated from protobuf field: flow.IGMP IGMP = 7
+         */
+        iGMP: IGMP;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -367,7 +433,8 @@ export interface Layer7 {
     } | {
         oneofKind: "kafka";
         /**
-         * @generated from protobuf field: flow.Kafka kafka = 102
+         * @deprecated
+         * @generated from protobuf field: flow.Kafka kafka = 102 [deprecated = true]
          */
         kafka: Kafka;
     } | {
@@ -605,6 +672,74 @@ export interface ICMPv6 {
      * @generated from protobuf field: uint32 code = 2
      */
     code: number;
+}
+/**
+ * @generated from protobuf message flow.VRRP
+ */
+export interface VRRP {
+    /**
+     * @generated from protobuf field: uint32 type = 1
+     */
+    type: number;
+    /**
+     * @generated from protobuf field: uint32 vrid = 2
+     */
+    vrid: number;
+    /**
+     * @generated from protobuf field: uint32 priority = 3
+     */
+    priority: number;
+}
+/**
+ * @generated from protobuf message flow.IGMP
+ */
+export interface IGMP {
+    /**
+     * @generated from protobuf field: uint32 type = 1
+     */
+    type: number;
+    /**
+     * @generated from protobuf field: string group_address = 2
+     */
+    groupAddress: string;
+}
+/**
+ * @generated from protobuf message flow.Tunnel
+ */
+export interface Tunnel {
+    /**
+     * @generated from protobuf field: flow.Tunnel.Protocol protocol = 1
+     */
+    protocol: Tunnel_Protocol;
+    /**
+     * @generated from protobuf field: flow.IP IP = 2
+     */
+    iP?: IP;
+    /**
+     * @generated from protobuf field: flow.Layer4 l4 = 3
+     */
+    l4?: Layer4;
+    /**
+     * @generated from protobuf field: uint32 vni = 4
+     */
+    vni: number;
+}
+/**
+ * @generated from protobuf enum flow.Tunnel.Protocol
+ */
+export enum Tunnel_Protocol {
+    /**
+     * @generated from protobuf enum value: UNKNOWN = 0;
+     */
+    UNKNOWN = 0,
+    /**
+     * @generated from protobuf enum value: VXLAN = 1;
+     */
+    VXLAN = 1,
+    /**
+     * @generated from protobuf enum value: GENEVE = 2;
+     */
+    GENEVE = 2
 }
 /**
  * @generated from protobuf message flow.Policy
@@ -935,6 +1070,20 @@ export interface FlowFilter {
      */
     traceId: string[];
     /**
+     * ip_trace_id filters flows by IPTraceID
+     *
+     * @generated from protobuf field: repeated uint64 ip_trace_id = 39
+     */
+    ipTraceId: bigint[];
+    /**
+     * encrypted filters flows based on encryption status (WireGuard/IPsec).
+     * When set to true, only encrypted flows are returned.
+     * When set to false, only unencrypted flows are returned.
+     *
+     * @generated from protobuf field: repeated bool encrypted = 40
+     */
+    encrypted: boolean[];
+    /**
      * experimental contains filters that are not stable yet. Support for
      * experimental features is always optional and subject to change.
      *
@@ -1066,6 +1215,7 @@ export interface HTTP {
 /**
  * L7 information for Kafka flows. It corresponds to Cilium's [accesslog.LogRecordKafka](https://github.com/cilium/cilium/blob/728c79e427438ab6f8d9375b62fccd6fed4ace3a/pkg/proxy/accesslog/record.go#L229) type.
  *
+ * @deprecated
  * @generated from protobuf message flow.Kafka
  */
 export interface Kafka {
@@ -1104,6 +1254,19 @@ export interface Service {
     namespace: string;
 }
 /**
+ * @generated from protobuf message flow.IPTraceID
+ */
+export interface IPTraceID {
+    /**
+     * @generated from protobuf field: uint64 trace_id = 1
+     */
+    traceId: bigint;
+    /**
+     * @generated from protobuf field: uint32 ip_option_type = 2
+     */
+    ipOptionType: number;
+}
+/**
  * LostEvent is a message which notifies consumers about a loss of events
  * that happened before the events were captured by Hubble.
  *
@@ -1129,6 +1292,18 @@ export interface LostEvent {
      * @generated from protobuf field: google.protobuf.Int32Value cpu = 3
      */
     cpu?: Int32Value;
+    /**
+     * first is the timestamp of the first event that was lost.
+     *
+     * @generated from protobuf field: google.protobuf.Timestamp first = 4
+     */
+    first?: Timestamp;
+    /**
+     * last is the timestamp of the last event that was lost.
+     *
+     * @generated from protobuf field: google.protobuf.Timestamp last = 5
+     */
+    last?: Timestamp;
 }
 /**
  * @generated from protobuf message flow.AgentEvent
@@ -1188,13 +1363,15 @@ export interface AgentEvent {
     } | {
         oneofKind: "serviceUpsert";
         /**
-         * @generated from protobuf field: flow.ServiceUpsertNotification service_upsert = 106
+         * @deprecated
+         * @generated from protobuf field: flow.ServiceUpsertNotification service_upsert = 106 [deprecated = true]
          */
         serviceUpsert: ServiceUpsertNotification;
     } | {
         oneofKind: "serviceDelete";
         /**
-         * @generated from protobuf field: flow.ServiceDeleteNotification service_delete = 107
+         * @deprecated
+         * @generated from protobuf field: flow.ServiceDeleteNotification service_delete = 107 [deprecated = true]
          */
         serviceDelete: ServiceDeleteNotification;
     } | {
@@ -1320,6 +1497,7 @@ export interface IPCacheNotification {
     podName: string;
 }
 /**
+ * @deprecated
  * @generated from protobuf message flow.ServiceUpsertNotificationAddr
  */
 export interface ServiceUpsertNotificationAddr {
@@ -1333,6 +1511,7 @@ export interface ServiceUpsertNotificationAddr {
     port: number;
 }
 /**
+ * @deprecated
  * @generated from protobuf message flow.ServiceUpsertNotification
  */
 export interface ServiceUpsertNotification {
@@ -1375,6 +1554,7 @@ export interface ServiceUpsertNotification {
     intTrafficPolicy: string;
 }
 /**
+ * @deprecated
  * @generated from protobuf message flow.ServiceDeleteNotification
  */
 export interface ServiceDeleteNotification {
@@ -1432,6 +1612,31 @@ export interface DebugEvent {
      * @generated from protobuf field: google.protobuf.Int32Value cpu = 8
      */
     cpu?: Int32Value;
+}
+/**
+ * Aggregate contains flow aggregation counters
+ *
+ * @generated from protobuf message flow.Aggregate
+ */
+export interface Aggregate {
+    /**
+     * ingress_flow_count is the count of flows in the ingress direction
+     *
+     * @generated from protobuf field: uint32 ingress_flow_count = 1
+     */
+    ingressFlowCount: number;
+    /**
+     * egress_flow_count is the count of flows in the egress direction
+     *
+     * @generated from protobuf field: uint32 egress_flow_count = 2
+     */
+    egressFlowCount: number;
+    /**
+     * unknown_direction_flow_count is the count of flows with unknown traffic direction
+     *
+     * @generated from protobuf field: uint32 unknown_direction_flow_count = 3
+     */
+    unknownDirectionFlowCount: number;
 }
 /**
  * @generated from protobuf enum flow.FlowType
@@ -1622,7 +1827,8 @@ export enum TraceReason {
      */
     SRV6_DECAP = 7,
     /**
-     * @generated from protobuf enum value: ENCRYPT_OVERLAY = 8;
+     * @deprecated
+     * @generated from protobuf enum value: ENCRYPT_OVERLAY = 8 [deprecated = true];
      */
     ENCRYPT_OVERLAY = 8
 }
@@ -2052,7 +2258,13 @@ export enum DropReason {
      *
      * @generated from protobuf enum value: DROP_NO_EGRESS_IP = 204;
      */
-    DROP_NO_EGRESS_IP = 204
+    DROP_NO_EGRESS_IP = 204,
+    /**
+     * Punt packet to a user space proxy.
+     *
+     * @generated from protobuf enum value: DROP_PUNT_PROXY = 205;
+     */
+    DROP_PUNT_PROXY = 205
 }
 /**
  * @generated from protobuf enum flow.TrafficDirection
@@ -2217,11 +2429,13 @@ export enum AgentEventType {
      */
     IPCACHE_DELETED = 10,
     /**
-     * @generated from protobuf enum value: SERVICE_UPSERTED = 11;
+     * @deprecated
+     * @generated from protobuf enum value: SERVICE_UPSERTED = 11 [deprecated = true];
      */
     SERVICE_UPSERTED = 11,
     /**
-     * @generated from protobuf enum value: SERVICE_DELETED = 12;
+     * @deprecated
+     * @generated from protobuf enum value: SERVICE_DELETED = 12 [deprecated = true];
      */
     SERVICE_DELETED = 12
 }
@@ -2533,7 +2747,15 @@ export enum DebugEventType {
     /**
      * @generated from protobuf enum value: DBG_SKIP_POLICY = 66;
      */
-    DBG_SKIP_POLICY = 66
+    DBG_SKIP_POLICY = 66,
+    /**
+     * @generated from protobuf enum value: DBG_LB6_LOOPBACK_SNAT = 67;
+     */
+    DBG_LB6_LOOPBACK_SNAT = 67,
+    /**
+     * @generated from protobuf enum value: DBG_LB6_LOOPBACK_SNAT_REV = 68;
+     */
+    DBG_LB6_LOOPBACK_SNAT_REV = 68
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Flow$Type extends MessageType<Flow> {
@@ -2541,12 +2763,14 @@ class Flow$Type extends MessageType<Flow> {
         super("flow.Flow", [
             { no: 1, name: "time", kind: "message", T: () => Timestamp },
             { no: 34, name: "uuid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 41, name: "emitter", kind: "message", T: () => Emitter },
             { no: 2, name: "verdict", kind: "enum", T: () => ["flow.Verdict", Verdict] },
             { no: 3, name: "drop_reason", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 35, name: "auth_type", kind: "enum", T: () => ["flow.AuthType", AuthType] },
             { no: 4, name: "ethernet", kind: "message", T: () => Ethernet },
             { no: 5, name: "IP", kind: "message", jsonName: "IP", T: () => IP },
             { no: 6, name: "l4", kind: "message", T: () => Layer4 },
+            { no: 39, name: "tunnel", kind: "message", T: () => Tunnel },
             { no: 8, name: "source", kind: "message", T: () => Endpoint },
             { no: 9, name: "destination", kind: "message", T: () => Endpoint },
             { no: 10, name: "Type", kind: "enum", jsonName: "Type", T: () => ["flow.FlowType", FlowType] },
@@ -2564,6 +2788,7 @@ class Flow$Type extends MessageType<Flow> {
             { no: 24, name: "trace_observation_point", kind: "enum", T: () => ["flow.TraceObservationPoint", TraceObservationPoint] },
             { no: 36, name: "trace_reason", kind: "enum", T: () => ["flow.TraceReason", TraceReason] },
             { no: 38, name: "file", kind: "message", T: () => FileInfo },
+            { no: 40, name: "ip_trace_id", kind: "message", T: () => IPTraceID },
             { no: 25, name: "drop_reason_desc", kind: "enum", T: () => ["flow.DropReason", DropReason] },
             { no: 26, name: "is_reply", kind: "message", T: () => BoolValue },
             { no: 27, name: "debug_capture_point", kind: "enum", T: () => ["flow.DebugCapturePoint", DebugCapturePoint] },
@@ -2578,7 +2803,9 @@ class Flow$Type extends MessageType<Flow> {
             { no: 21001, name: "egress_allowed_by", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Policy },
             { no: 21002, name: "ingress_allowed_by", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Policy },
             { no: 21004, name: "egress_denied_by", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Policy },
-            { no: 21005, name: "ingress_denied_by", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Policy }
+            { no: 21005, name: "ingress_denied_by", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Policy },
+            { no: 21006, name: "policy_log", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 21007, name: "aggregate", kind: "message", T: () => Aggregate }
         ]);
     }
     create(value?: PartialMessage<Flow>): Flow {
@@ -2608,6 +2835,7 @@ class Flow$Type extends MessageType<Flow> {
         message.ingressAllowedBy = [];
         message.egressDeniedBy = [];
         message.ingressDeniedBy = [];
+        message.policyLog = [];
         if (value !== undefined)
             reflectionMergePartial<Flow>(this, message, value);
         return message;
@@ -2622,6 +2850,9 @@ class Flow$Type extends MessageType<Flow> {
                     break;
                 case /* string uuid */ 34:
                     message.uuid = reader.string();
+                    break;
+                case /* flow.Emitter emitter */ 41:
+                    message.emitter = Emitter.internalBinaryRead(reader, reader.uint32(), options, message.emitter);
                     break;
                 case /* flow.Verdict verdict */ 2:
                     message.verdict = reader.int32();
@@ -2640,6 +2871,9 @@ class Flow$Type extends MessageType<Flow> {
                     break;
                 case /* flow.Layer4 l4 */ 6:
                     message.l4 = Layer4.internalBinaryRead(reader, reader.uint32(), options, message.l4);
+                    break;
+                case /* flow.Tunnel tunnel */ 39:
+                    message.tunnel = Tunnel.internalBinaryRead(reader, reader.uint32(), options, message.tunnel);
                     break;
                 case /* flow.Endpoint source */ 8:
                     message.source = Endpoint.internalBinaryRead(reader, reader.uint32(), options, message.source);
@@ -2692,6 +2926,9 @@ class Flow$Type extends MessageType<Flow> {
                 case /* flow.FileInfo file */ 38:
                     message.file = FileInfo.internalBinaryRead(reader, reader.uint32(), options, message.file);
                     break;
+                case /* flow.IPTraceID ip_trace_id */ 40:
+                    message.ipTraceId = IPTraceID.internalBinaryRead(reader, reader.uint32(), options, message.ipTraceId);
+                    break;
                 case /* flow.DropReason drop_reason_desc */ 25:
                     message.dropReasonDesc = reader.int32();
                     break;
@@ -2736,6 +2973,12 @@ class Flow$Type extends MessageType<Flow> {
                     break;
                 case /* repeated flow.Policy ingress_denied_by */ 21005:
                     message.ingressDeniedBy.push(Policy.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated string policy_log */ 21006:
+                    message.policyLog.push(reader.string());
+                    break;
+                case /* flow.Aggregate aggregate */ 21007:
+                    message.aggregate = Aggregate.internalBinaryRead(reader, reader.uint32(), options, message.aggregate);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -2851,6 +3094,15 @@ class Flow$Type extends MessageType<Flow> {
         /* flow.FileInfo file = 38; */
         if (message.file)
             FileInfo.internalBinaryWrite(message.file, writer.tag(38, WireType.LengthDelimited).fork(), options).join();
+        /* flow.Tunnel tunnel = 39; */
+        if (message.tunnel)
+            Tunnel.internalBinaryWrite(message.tunnel, writer.tag(39, WireType.LengthDelimited).fork(), options).join();
+        /* flow.IPTraceID ip_trace_id = 40; */
+        if (message.ipTraceId)
+            IPTraceID.internalBinaryWrite(message.ipTraceId, writer.tag(40, WireType.LengthDelimited).fork(), options).join();
+        /* flow.Emitter emitter = 41; */
+        if (message.emitter)
+            Emitter.internalBinaryWrite(message.emitter, writer.tag(41, WireType.LengthDelimited).fork(), options).join();
         /* repeated flow.Policy egress_allowed_by = 21001; */
         for (let i = 0; i < message.egressAllowedBy.length; i++)
             Policy.internalBinaryWrite(message.egressAllowedBy[i], writer.tag(21001, WireType.LengthDelimited).fork(), options).join();
@@ -2863,6 +3115,12 @@ class Flow$Type extends MessageType<Flow> {
         /* repeated flow.Policy ingress_denied_by = 21005; */
         for (let i = 0; i < message.ingressDeniedBy.length; i++)
             Policy.internalBinaryWrite(message.ingressDeniedBy[i], writer.tag(21005, WireType.LengthDelimited).fork(), options).join();
+        /* repeated string policy_log = 21006; */
+        for (let i = 0; i < message.policyLog.length; i++)
+            writer.tag(21006, WireType.LengthDelimited).string(message.policyLog[i]);
+        /* flow.Aggregate aggregate = 21007; */
+        if (message.aggregate)
+            Aggregate.internalBinaryWrite(message.aggregate, writer.tag(21007, WireType.LengthDelimited).fork(), options).join();
         /* string Summary = 100000 [deprecated = true]; */
         if (message.summary !== "")
             writer.tag(100000, WireType.LengthDelimited).string(message.summary);
@@ -2879,6 +3137,61 @@ class Flow$Type extends MessageType<Flow> {
  * @generated MessageType for protobuf message flow.Flow
  */
 export const Flow = new Flow$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Emitter$Type extends MessageType<Emitter> {
+    constructor() {
+        super("flow.Emitter", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Emitter>): Emitter {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.version = "";
+        if (value !== undefined)
+            reflectionMergePartial<Emitter>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Emitter): Emitter {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string version */ 2:
+                    message.version = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Emitter, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string version = 2; */
+        if (message.version !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.version);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message flow.Emitter
+ */
+export const Emitter = new Emitter$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class FileInfo$Type extends MessageType<FileInfo> {
     constructor() {
@@ -2942,7 +3255,9 @@ class Layer4$Type extends MessageType<Layer4> {
             { no: 2, name: "UDP", kind: "message", jsonName: "UDP", oneof: "protocol", T: () => UDP },
             { no: 3, name: "ICMPv4", kind: "message", jsonName: "ICMPv4", oneof: "protocol", T: () => ICMPv4 },
             { no: 4, name: "ICMPv6", kind: "message", jsonName: "ICMPv6", oneof: "protocol", T: () => ICMPv6 },
-            { no: 5, name: "SCTP", kind: "message", jsonName: "SCTP", oneof: "protocol", T: () => SCTP }
+            { no: 5, name: "SCTP", kind: "message", jsonName: "SCTP", oneof: "protocol", T: () => SCTP },
+            { no: 6, name: "VRRP", kind: "message", jsonName: "VRRP", oneof: "protocol", T: () => VRRP },
+            { no: 7, name: "IGMP", kind: "message", jsonName: "IGMP", oneof: "protocol", T: () => IGMP }
         ]);
     }
     create(value?: PartialMessage<Layer4>): Layer4 {
@@ -2987,6 +3302,18 @@ class Layer4$Type extends MessageType<Layer4> {
                         sCTP: SCTP.internalBinaryRead(reader, reader.uint32(), options, (message.protocol as any).sCTP)
                     };
                     break;
+                case /* flow.VRRP VRRP */ 6:
+                    message.protocol = {
+                        oneofKind: "vRRP",
+                        vRRP: VRRP.internalBinaryRead(reader, reader.uint32(), options, (message.protocol as any).vRRP)
+                    };
+                    break;
+                case /* flow.IGMP IGMP */ 7:
+                    message.protocol = {
+                        oneofKind: "iGMP",
+                        iGMP: IGMP.internalBinaryRead(reader, reader.uint32(), options, (message.protocol as any).iGMP)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -3014,6 +3341,12 @@ class Layer4$Type extends MessageType<Layer4> {
         /* flow.SCTP SCTP = 5; */
         if (message.protocol.oneofKind === "sCTP")
             SCTP.internalBinaryWrite(message.protocol.sCTP, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* flow.VRRP VRRP = 6; */
+        if (message.protocol.oneofKind === "vRRP")
+            VRRP.internalBinaryWrite(message.protocol.vRRP, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* flow.IGMP IGMP = 7; */
+        if (message.protocol.oneofKind === "iGMP")
+            IGMP.internalBinaryWrite(message.protocol.iGMP, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -3067,7 +3400,7 @@ class Layer7$Type extends MessageType<Layer7> {
                         http: HTTP.internalBinaryRead(reader, reader.uint32(), options, (message.record as any).http)
                     };
                     break;
-                case /* flow.Kafka kafka */ 102:
+                case /* flow.Kafka kafka = 102 [deprecated = true] */ 102:
                     message.record = {
                         oneofKind: "kafka",
                         kafka: Kafka.internalBinaryRead(reader, reader.uint32(), options, (message.record as any).kafka)
@@ -3097,7 +3430,7 @@ class Layer7$Type extends MessageType<Layer7> {
         /* flow.HTTP http = 101; */
         if (message.record.oneofKind === "http")
             HTTP.internalBinaryWrite(message.record.http, writer.tag(101, WireType.LengthDelimited).fork(), options).join();
-        /* flow.Kafka kafka = 102; */
+        /* flow.Kafka kafka = 102 [deprecated = true]; */
         if (message.record.oneofKind === "kafka")
             Kafka.internalBinaryWrite(message.record.kafka, writer.tag(102, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
@@ -3881,6 +4214,193 @@ class ICMPv6$Type extends MessageType<ICMPv6> {
  */
 export const ICMPv6 = new ICMPv6$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class VRRP$Type extends MessageType<VRRP> {
+    constructor() {
+        super("flow.VRRP", [
+            { no: 1, name: "type", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "vrid", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 3, name: "priority", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<VRRP>): VRRP {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = 0;
+        message.vrid = 0;
+        message.priority = 0;
+        if (value !== undefined)
+            reflectionMergePartial<VRRP>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: VRRP): VRRP {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 type */ 1:
+                    message.type = reader.uint32();
+                    break;
+                case /* uint32 vrid */ 2:
+                    message.vrid = reader.uint32();
+                    break;
+                case /* uint32 priority */ 3:
+                    message.priority = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: VRRP, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 type = 1; */
+        if (message.type !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.type);
+        /* uint32 vrid = 2; */
+        if (message.vrid !== 0)
+            writer.tag(2, WireType.Varint).uint32(message.vrid);
+        /* uint32 priority = 3; */
+        if (message.priority !== 0)
+            writer.tag(3, WireType.Varint).uint32(message.priority);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message flow.VRRP
+ */
+export const VRRP = new VRRP$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class IGMP$Type extends MessageType<IGMP> {
+    constructor() {
+        super("flow.IGMP", [
+            { no: 1, name: "type", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "group_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<IGMP>): IGMP {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = 0;
+        message.groupAddress = "";
+        if (value !== undefined)
+            reflectionMergePartial<IGMP>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: IGMP): IGMP {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 type */ 1:
+                    message.type = reader.uint32();
+                    break;
+                case /* string group_address */ 2:
+                    message.groupAddress = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: IGMP, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 type = 1; */
+        if (message.type !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.type);
+        /* string group_address = 2; */
+        if (message.groupAddress !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.groupAddress);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message flow.IGMP
+ */
+export const IGMP = new IGMP$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Tunnel$Type extends MessageType<Tunnel> {
+    constructor() {
+        super("flow.Tunnel", [
+            { no: 1, name: "protocol", kind: "enum", T: () => ["flow.Tunnel.Protocol", Tunnel_Protocol] },
+            { no: 2, name: "IP", kind: "message", jsonName: "IP", T: () => IP },
+            { no: 3, name: "l4", kind: "message", T: () => Layer4 },
+            { no: 4, name: "vni", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Tunnel>): Tunnel {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.protocol = 0;
+        message.vni = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Tunnel>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Tunnel): Tunnel {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* flow.Tunnel.Protocol protocol */ 1:
+                    message.protocol = reader.int32();
+                    break;
+                case /* flow.IP IP */ 2:
+                    message.iP = IP.internalBinaryRead(reader, reader.uint32(), options, message.iP);
+                    break;
+                case /* flow.Layer4 l4 */ 3:
+                    message.l4 = Layer4.internalBinaryRead(reader, reader.uint32(), options, message.l4);
+                    break;
+                case /* uint32 vni */ 4:
+                    message.vni = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Tunnel, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* flow.Tunnel.Protocol protocol = 1; */
+        if (message.protocol !== 0)
+            writer.tag(1, WireType.Varint).int32(message.protocol);
+        /* flow.IP IP = 2; */
+        if (message.iP)
+            IP.internalBinaryWrite(message.iP, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* flow.Layer4 l4 = 3; */
+        if (message.l4)
+            Layer4.internalBinaryWrite(message.l4, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* uint32 vni = 4; */
+        if (message.vni !== 0)
+            writer.tag(4, WireType.Varint).uint32(message.vni);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message flow.Tunnel
+ */
+export const Tunnel = new Tunnel$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Policy$Type extends MessageType<Policy> {
     constructor() {
         super("flow.Policy", [
@@ -4119,6 +4639,8 @@ class FlowFilter$Type extends MessageType<FlowFilter> {
             { no: 36, name: "node_labels", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 25, name: "ip_version", kind: "enum", repeat: 1 /*RepeatType.PACKED*/, T: () => ["flow.IPVersion", IPVersion] },
             { no: 28, name: "trace_id", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 39, name: "ip_trace_id", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 40, name: "encrypted", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 8 /*ScalarType.BOOL*/ },
             { no: 999, name: "experimental", kind: "message", T: () => FlowFilter_Experimental }
         ]);
     }
@@ -4162,6 +4684,8 @@ class FlowFilter$Type extends MessageType<FlowFilter> {
         message.nodeLabels = [];
         message.ipVersion = [];
         message.traceId = [];
+        message.ipTraceId = [];
+        message.encrypted = [];
         if (value !== undefined)
             reflectionMergePartial<FlowFilter>(this, message, value);
         return message;
@@ -4312,6 +4836,20 @@ class FlowFilter$Type extends MessageType<FlowFilter> {
                     break;
                 case /* repeated string trace_id */ 28:
                     message.traceId.push(reader.string());
+                    break;
+                case /* repeated uint64 ip_trace_id */ 39:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.ipTraceId.push(reader.uint64().toBigInt());
+                    else
+                        message.ipTraceId.push(reader.uint64().toBigInt());
+                    break;
+                case /* repeated bool encrypted */ 40:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.encrypted.push(reader.bool());
+                    else
+                        message.encrypted.push(reader.bool());
                     break;
                 case /* flow.FlowFilter.Experimental experimental */ 999:
                     message.experimental = FlowFilter_Experimental.internalBinaryRead(reader, reader.uint32(), options, message.experimental);
@@ -4470,6 +5008,20 @@ class FlowFilter$Type extends MessageType<FlowFilter> {
         /* repeated string destination_cluster_name = 38; */
         for (let i = 0; i < message.destinationClusterName.length; i++)
             writer.tag(38, WireType.LengthDelimited).string(message.destinationClusterName[i]);
+        /* repeated uint64 ip_trace_id = 39; */
+        if (message.ipTraceId.length) {
+            writer.tag(39, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.ipTraceId.length; i++)
+                writer.uint64(message.ipTraceId[i]);
+            writer.join();
+        }
+        /* repeated bool encrypted = 40; */
+        if (message.encrypted.length) {
+            writer.tag(40, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.encrypted.length; i++)
+                writer.bool(message.encrypted[i]);
+            writer.join();
+        }
         /* flow.FlowFilter.Experimental experimental = 999; */
         if (message.experimental)
             FlowFilter_Experimental.internalBinaryWrite(message.experimental, writer.tag(999, WireType.LengthDelimited).fork(), options).join();
@@ -4843,6 +5395,7 @@ class Kafka$Type extends MessageType<Kafka> {
     }
 }
 /**
+ * @deprecated
  * @generated MessageType for protobuf message flow.Kafka
  */
 export const Kafka = new Kafka$Type();
@@ -4902,12 +5455,69 @@ class Service$Type extends MessageType<Service> {
  */
 export const Service = new Service$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class IPTraceID$Type extends MessageType<IPTraceID> {
+    constructor() {
+        super("flow.IPTraceID", [
+            { no: 1, name: "trace_id", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "ip_option_type", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<IPTraceID>): IPTraceID {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.traceId = 0n;
+        message.ipOptionType = 0;
+        if (value !== undefined)
+            reflectionMergePartial<IPTraceID>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: IPTraceID): IPTraceID {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint64 trace_id */ 1:
+                    message.traceId = reader.uint64().toBigInt();
+                    break;
+                case /* uint32 ip_option_type */ 2:
+                    message.ipOptionType = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: IPTraceID, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint64 trace_id = 1; */
+        if (message.traceId !== 0n)
+            writer.tag(1, WireType.Varint).uint64(message.traceId);
+        /* uint32 ip_option_type = 2; */
+        if (message.ipOptionType !== 0)
+            writer.tag(2, WireType.Varint).uint32(message.ipOptionType);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message flow.IPTraceID
+ */
+export const IPTraceID = new IPTraceID$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class LostEvent$Type extends MessageType<LostEvent> {
     constructor() {
         super("flow.LostEvent", [
             { no: 1, name: "source", kind: "enum", T: () => ["flow.LostEventSource", LostEventSource] },
             { no: 2, name: "num_events_lost", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 3, name: "cpu", kind: "message", T: () => Int32Value }
+            { no: 3, name: "cpu", kind: "message", T: () => Int32Value },
+            { no: 4, name: "first", kind: "message", T: () => Timestamp },
+            { no: 5, name: "last", kind: "message", T: () => Timestamp }
         ]);
     }
     create(value?: PartialMessage<LostEvent>): LostEvent {
@@ -4932,6 +5542,12 @@ class LostEvent$Type extends MessageType<LostEvent> {
                 case /* google.protobuf.Int32Value cpu */ 3:
                     message.cpu = Int32Value.internalBinaryRead(reader, reader.uint32(), options, message.cpu);
                     break;
+                case /* google.protobuf.Timestamp first */ 4:
+                    message.first = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.first);
+                    break;
+                case /* google.protobuf.Timestamp last */ 5:
+                    message.last = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.last);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -4953,6 +5569,12 @@ class LostEvent$Type extends MessageType<LostEvent> {
         /* google.protobuf.Int32Value cpu = 3; */
         if (message.cpu)
             Int32Value.internalBinaryWrite(message.cpu, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp first = 4; */
+        if (message.first)
+            Timestamp.internalBinaryWrite(message.first, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp last = 5; */
+        if (message.last)
+            Timestamp.internalBinaryWrite(message.last, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -5030,13 +5652,13 @@ class AgentEvent$Type extends MessageType<AgentEvent> {
                         ipcacheUpdate: IPCacheNotification.internalBinaryRead(reader, reader.uint32(), options, (message.notification as any).ipcacheUpdate)
                     };
                     break;
-                case /* flow.ServiceUpsertNotification service_upsert */ 106:
+                case /* flow.ServiceUpsertNotification service_upsert = 106 [deprecated = true] */ 106:
                     message.notification = {
                         oneofKind: "serviceUpsert",
                         serviceUpsert: ServiceUpsertNotification.internalBinaryRead(reader, reader.uint32(), options, (message.notification as any).serviceUpsert)
                     };
                     break;
-                case /* flow.ServiceDeleteNotification service_delete */ 107:
+                case /* flow.ServiceDeleteNotification service_delete = 107 [deprecated = true] */ 107:
                     message.notification = {
                         oneofKind: "serviceDelete",
                         serviceDelete: ServiceDeleteNotification.internalBinaryRead(reader, reader.uint32(), options, (message.notification as any).serviceDelete)
@@ -5075,10 +5697,10 @@ class AgentEvent$Type extends MessageType<AgentEvent> {
         /* flow.IPCacheNotification ipcache_update = 105; */
         if (message.notification.oneofKind === "ipcacheUpdate")
             IPCacheNotification.internalBinaryWrite(message.notification.ipcacheUpdate, writer.tag(105, WireType.LengthDelimited).fork(), options).join();
-        /* flow.ServiceUpsertNotification service_upsert = 106; */
+        /* flow.ServiceUpsertNotification service_upsert = 106 [deprecated = true]; */
         if (message.notification.oneofKind === "serviceUpsert")
             ServiceUpsertNotification.internalBinaryWrite(message.notification.serviceUpsert, writer.tag(106, WireType.LengthDelimited).fork(), options).join();
-        /* flow.ServiceDeleteNotification service_delete = 107; */
+        /* flow.ServiceDeleteNotification service_delete = 107 [deprecated = true]; */
         if (message.notification.oneofKind === "serviceDelete")
             ServiceDeleteNotification.internalBinaryWrite(message.notification.serviceDelete, writer.tag(107, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
@@ -5551,6 +6173,7 @@ class ServiceUpsertNotificationAddr$Type extends MessageType<ServiceUpsertNotifi
     }
 }
 /**
+ * @deprecated
  * @generated MessageType for protobuf message flow.ServiceUpsertNotificationAddr
  */
 export const ServiceUpsertNotificationAddr = new ServiceUpsertNotificationAddr$Type();
@@ -5661,6 +6284,7 @@ class ServiceUpsertNotification$Type extends MessageType<ServiceUpsertNotificati
     }
 }
 /**
+ * @deprecated
  * @generated MessageType for protobuf message flow.ServiceUpsertNotification
  */
 export const ServiceUpsertNotification = new ServiceUpsertNotification$Type();
@@ -5708,6 +6332,7 @@ class ServiceDeleteNotification$Type extends MessageType<ServiceDeleteNotificati
     }
 }
 /**
+ * @deprecated
  * @generated MessageType for protobuf message flow.ServiceDeleteNotification
  */
 export const ServiceDeleteNotification = new ServiceDeleteNotification$Type();
@@ -5863,3 +6488,66 @@ class DebugEvent$Type extends MessageType<DebugEvent> {
  * @generated MessageType for protobuf message flow.DebugEvent
  */
 export const DebugEvent = new DebugEvent$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Aggregate$Type extends MessageType<Aggregate> {
+    constructor() {
+        super("flow.Aggregate", [
+            { no: 1, name: "ingress_flow_count", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "egress_flow_count", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 3, name: "unknown_direction_flow_count", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Aggregate>): Aggregate {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.ingressFlowCount = 0;
+        message.egressFlowCount = 0;
+        message.unknownDirectionFlowCount = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Aggregate>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Aggregate): Aggregate {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 ingress_flow_count */ 1:
+                    message.ingressFlowCount = reader.uint32();
+                    break;
+                case /* uint32 egress_flow_count */ 2:
+                    message.egressFlowCount = reader.uint32();
+                    break;
+                case /* uint32 unknown_direction_flow_count */ 3:
+                    message.unknownDirectionFlowCount = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Aggregate, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 ingress_flow_count = 1; */
+        if (message.ingressFlowCount !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.ingressFlowCount);
+        /* uint32 egress_flow_count = 2; */
+        if (message.egressFlowCount !== 0)
+            writer.tag(2, WireType.Varint).uint32(message.egressFlowCount);
+        /* uint32 unknown_direction_flow_count = 3; */
+        if (message.unknownDirectionFlowCount !== 0)
+            writer.tag(3, WireType.Varint).uint32(message.unknownDirectionFlowCount);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message flow.Aggregate
+ */
+export const Aggregate = new Aggregate$Type();

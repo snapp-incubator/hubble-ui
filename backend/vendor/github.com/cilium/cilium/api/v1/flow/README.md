@@ -6,9 +6,11 @@
 - [flow/flow.proto](#flow_flow-proto)
     - [AgentEvent](#flow-AgentEvent)
     - [AgentEventUnknown](#flow-AgentEventUnknown)
+    - [Aggregate](#flow-Aggregate)
     - [CiliumEventType](#flow-CiliumEventType)
     - [DNS](#flow-DNS)
     - [DebugEvent](#flow-DebugEvent)
+    - [Emitter](#flow-Emitter)
     - [Endpoint](#flow-Endpoint)
     - [EndpointRegenNotification](#flow-EndpointRegenNotification)
     - [EndpointUpdateNotification](#flow-EndpointUpdateNotification)
@@ -22,8 +24,10 @@
     - [HTTPHeader](#flow-HTTPHeader)
     - [ICMPv4](#flow-ICMPv4)
     - [ICMPv6](#flow-ICMPv6)
+    - [IGMP](#flow-IGMP)
     - [IP](#flow-IP)
     - [IPCacheNotification](#flow-IPCacheNotification)
+    - [IPTraceID](#flow-IPTraceID)
     - [Kafka](#flow-Kafka)
     - [Layer4](#flow-Layer4)
     - [Layer7](#flow-Layer7)
@@ -41,7 +45,9 @@
     - [TimeNotification](#flow-TimeNotification)
     - [TraceContext](#flow-TraceContext)
     - [TraceParent](#flow-TraceParent)
+    - [Tunnel](#flow-Tunnel)
     - [UDP](#flow-UDP)
+    - [VRRP](#flow-VRRP)
     - [Workload](#flow-Workload)
   
     - [AgentEventType](#flow-AgentEventType)
@@ -58,6 +64,7 @@
     - [TraceObservationPoint](#flow-TraceObservationPoint)
     - [TraceReason](#flow-TraceReason)
     - [TrafficDirection](#flow-TrafficDirection)
+    - [Tunnel.Protocol](#flow-Tunnel-Protocol)
     - [Verdict](#flow-Verdict)
   
 - [Scalar Value Types](#scalar-value-types)
@@ -86,8 +93,8 @@
 | endpoint_regenerate | [EndpointRegenNotification](#flow-EndpointRegenNotification) |  | used for ENDPOINT_REGENERATE_SUCCESS and ENDPOINT_REGENERATE_FAILURE |
 | endpoint_update | [EndpointUpdateNotification](#flow-EndpointUpdateNotification) |  | used for ENDPOINT_CREATED and ENDPOINT_DELETED |
 | ipcache_update | [IPCacheNotification](#flow-IPCacheNotification) |  | used for IPCACHE_UPSERTED and IPCACHE_DELETED |
-| service_upsert | [ServiceUpsertNotification](#flow-ServiceUpsertNotification) |  |  |
-| service_delete | [ServiceDeleteNotification](#flow-ServiceDeleteNotification) |  |  |
+| service_upsert | [ServiceUpsertNotification](#flow-ServiceUpsertNotification) |  | **Deprecated.**  |
+| service_delete | [ServiceDeleteNotification](#flow-ServiceDeleteNotification) |  | **Deprecated.**  |
 
 
 
@@ -104,6 +111,23 @@
 | ----- | ---- | ----- | ----------- |
 | type | [string](#string) |  |  |
 | notification | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="flow-Aggregate"></a>
+
+### Aggregate
+Aggregate contains flow aggregation counters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ingress_flow_count | [uint32](#uint32) |  | ingress_flow_count is the count of flows in the ingress direction |
+| egress_flow_count | [uint32](#uint32) |  | egress_flow_count is the count of flows in the egress direction |
+| unknown_direction_flow_count | [uint32](#uint32) |  | unknown_direction_flow_count is the count of flows with unknown traffic direction |
 
 
 
@@ -164,6 +188,22 @@ DNS flow. This is basically directly mapped from Cilium&#39;s [LogRecordDNS](htt
 | arg3 | [google.protobuf.UInt32Value](#google-protobuf-UInt32Value) |  |  |
 | message | [string](#string) |  |  |
 | cpu | [google.protobuf.Int32Value](#google-protobuf-Int32Value) |  |  |
+
+
+
+
+
+
+<a name="flow-Emitter"></a>
+
+### Emitter
+Emitter identifies the source that emits a Hubble flow.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | name identifies the emitter. The name should be capitalized (&#34;Hubble&#34;, not &#34;hubble&#34; nor &#34;HUBBLE&#34;). |
+| version | [string](#string) |  | version identifiers the emitter version. The version should not contain a &#39;v&#39; prefix as sometimes seen (&#34;1.19.0&#34;, not &#34;v1.19.0&#34;). |
 
 
 
@@ -286,12 +326,14 @@ EventTypeFilter is a filter describing a particular event type.
 | ----- | ---- | ----- | ----------- |
 | time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | uuid | [string](#string) |  | uuid is a universally unique identifier for this flow. |
+| emitter | [Emitter](#flow-Emitter) |  | emitter identifies the source that emitted the flow. |
 | verdict | [Verdict](#flow-Verdict) |  |  |
 | drop_reason | [uint32](#uint32) |  | **Deprecated.** only applicable to Verdict = DROPPED. deprecated in favor of drop_reason_desc. |
 | auth_type | [AuthType](#flow-AuthType) |  | auth_type is the authentication type specified for the flow in Cilium Network Policy. Only set on policy verdict events. |
 | ethernet | [Ethernet](#flow-Ethernet) |  | l2 |
 | IP | [IP](#flow-IP) |  | l3 |
 | l4 | [Layer4](#flow-Layer4) |  | l4 |
+| tunnel | [Tunnel](#flow-Tunnel) |  |  |
 | source | [Endpoint](#flow-Endpoint) |  |  |
 | destination | [Endpoint](#flow-Endpoint) |  |  |
 | Type | [FlowType](#flow-FlowType) |  |  |
@@ -309,6 +351,7 @@ EventTypeFilter is a filter describing a particular event type.
 | trace_observation_point | [TraceObservationPoint](#flow-TraceObservationPoint) |  | Only applicable to cilium trace notifications, blank for other types. |
 | trace_reason | [TraceReason](#flow-TraceReason) |  | Cilium datapath trace reason info. |
 | file | [FileInfo](#flow-FileInfo) |  | Cilium datapath filename and line number. Currently only applicable when Verdict = DROPPED. |
+| ip_trace_id | [IPTraceID](#flow-IPTraceID) |  | IPTraceID relates to the trace ID in the IP options of a packet. |
 | drop_reason_desc | [DropReason](#flow-DropReason) |  | only applicable to Verdict = DROPPED. |
 | is_reply | [google.protobuf.BoolValue](#google-protobuf-BoolValue) |  | is_reply indicates that this was a packet (L4) or message (L7) in the reply direction. May be absent (in which case it is unknown whether it is a reply or not). |
 | debug_capture_point | [DebugCapturePoint](#flow-DebugCapturePoint) |  | Only applicable to cilium debug capture events, blank for other types |
@@ -324,6 +367,8 @@ EventTypeFilter is a filter describing a particular event type.
 | ingress_allowed_by | [Policy](#flow-Policy) | repeated | The CiliumNetworkPolicies allowing the ingress of the flow. |
 | egress_denied_by | [Policy](#flow-Policy) | repeated | The CiliumNetworkPolicies denying the egress of the flow. |
 | ingress_denied_by | [Policy](#flow-Policy) | repeated | The CiliumNetworkPolicies denying the ingress of the flow. |
+| policy_log | [string](#string) | repeated | The set of Log values for policies that matched this flow. If no matched policies have an explicit log value configured, this list is empty. Duplicate values are elided; each entry is unique. |
+| aggregate | [Aggregate](#flow-Aggregate) |  | Aggregate contains flow aggregation counters when flow aggregation is enabled. This field is only populated for aggregated flows. |
 
 
 
@@ -377,6 +422,8 @@ multiple fields are set, then all fields must match for the filter to match.
 | node_labels | [string](#string) | repeated | node_labels filters on a list of node label selectors. Selectors support the full Kubernetes label selector syntax. |
 | ip_version | [IPVersion](#flow-IPVersion) | repeated | filter based on IP version (ipv4 or ipv6) |
 | trace_id | [string](#string) | repeated | trace_id filters flows by trace ID |
+| ip_trace_id | [uint64](#uint64) | repeated | ip_trace_id filters flows by IPTraceID |
+| encrypted | [bool](#bool) | repeated | encrypted filters flows based on encryption status (WireGuard/IPsec). When set to true, only encrypted flows are returned. When set to false, only unencrypted flows are returned. |
 | experimental | [FlowFilter.Experimental](#flow-FlowFilter-Experimental) |  | experimental contains filters that are not stable yet. Support for experimental features is always optional and subject to change. |
 
 
@@ -467,6 +514,22 @@ L7 information for HTTP flows. It corresponds to Cilium&#39;s [accesslog.LogReco
 
 
 
+<a name="flow-IGMP"></a>
+
+### IGMP
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| type | [uint32](#uint32) |  |  |
+| group_address | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="flow-IP"></a>
 
 ### IP
@@ -508,6 +571,22 @@ L7 information for HTTP flows. It corresponds to Cilium&#39;s [accesslog.LogReco
 
 
 
+<a name="flow-IPTraceID"></a>
+
+### IPTraceID
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| trace_id | [uint64](#uint64) |  |  |
+| ip_option_type | [uint32](#uint32) |  |  |
+
+
+
+
+
+
 <a name="flow-Kafka"></a>
 
 ### Kafka
@@ -540,6 +619,8 @@ L7 information for Kafka flows. It corresponds to Cilium&#39;s [accesslog.LogRec
 | ICMPv4 | [ICMPv4](#flow-ICMPv4) |  | ICMP is technically not L4, but mutually exclusive with the above |
 | ICMPv6 | [ICMPv6](#flow-ICMPv6) |  |  |
 | SCTP | [SCTP](#flow-SCTP) |  |  |
+| VRRP | [VRRP](#flow-VRRP) |  |  |
+| IGMP | [IGMP](#flow-IGMP) |  |  |
 
 
 
@@ -558,7 +639,7 @@ Message for L7 flow, which roughly corresponds to Cilium&#39;s accesslog [LogRec
 | latency_ns | [uint64](#uint64) |  | Latency of the response |
 | dns | [DNS](#flow-DNS) |  |  |
 | http | [HTTP](#flow-HTTP) |  |  |
-| kafka | [Kafka](#flow-Kafka) |  |  |
+| kafka | [Kafka](#flow-Kafka) |  | **Deprecated.**  |
 
 
 
@@ -577,6 +658,8 @@ that happened before the events were captured by Hubble.
 | source | [LostEventSource](#flow-LostEventSource) |  | source is the location where events got lost. |
 | num_events_lost | [uint64](#uint64) |  | num_events_lost is the number of events that haven been lost at source. |
 | cpu | [google.protobuf.Int32Value](#google-protobuf-Int32Value) |  | cpu on which the event was lost if the source of lost events is PERF_EVENT_RING_BUFFER. |
+| first | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | first is the timestamp of the first event that was lost. |
+| last | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | last is the timestamp of the last event that was lost. |
 
 
 
@@ -808,6 +891,24 @@ TraceParent identifies the incoming request in a tracing system.
 
 
 
+<a name="flow-Tunnel"></a>
+
+### Tunnel
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| protocol | [Tunnel.Protocol](#flow-Tunnel-Protocol) |  |  |
+| IP | [IP](#flow-IP) |  |  |
+| l4 | [Layer4](#flow-Layer4) |  |  |
+| vni | [uint32](#uint32) |  |  |
+
+
+
+
+
+
 <a name="flow-UDP"></a>
 
 ### UDP
@@ -818,6 +919,23 @@ TraceParent identifies the incoming request in a tracing system.
 | ----- | ---- | ----- | ----------- |
 | source_port | [uint32](#uint32) |  |  |
 | destination_port | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="flow-VRRP"></a>
+
+### VRRP
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| type | [uint32](#uint32) |  |  |
+| vrid | [uint32](#uint32) |  |  |
+| priority | [uint32](#uint32) |  |  |
 
 
 
@@ -971,6 +1089,8 @@ These values are shared with pkg/monitor/api/datapath_debug.go and bpf/lib/dbg.h
 | DBG_SK_ASSIGN | 64 |  |
 | DBG_L7_LB | 65 |  |
 | DBG_SKIP_POLICY | 66 |  |
+| DBG_LB6_LOOPBACK_SNAT | 67 |  |
+| DBG_LB6_LOOPBACK_SNAT_REV | 68 |  |
 
 
 
@@ -1058,6 +1178,7 @@ here.
 | DROP_HOST_NOT_READY | 202 | A BPF program wants to tail call into bpf_host, but the host datapath hasn&#39;t been loaded yet. |
 | DROP_EP_NOT_READY | 203 | A BPF program wants to tail call some endpoint&#39;s policy program in cilium_call_policy, but the program is not available. |
 | DROP_NO_EGRESS_IP | 204 | An Egress Gateway node matched a packet against an Egress Gateway policy that didn&#39;t select a valid Egress IP. |
+| DROP_PUNT_PROXY | 205 | Punt packet to a user space proxy. |
 
 
 
@@ -1198,6 +1319,19 @@ This mirrors enum xlate_point in bpf/lib/trace_sock.h
 | TRAFFIC_DIRECTION_UNKNOWN | 0 |  |
 | INGRESS | 1 |  |
 | EGRESS | 2 |  |
+
+
+
+<a name="flow-Tunnel-Protocol"></a>
+
+### Tunnel.Protocol
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNKNOWN | 0 |  |
+| VXLAN | 1 |  |
+| GENEVE | 2 |  |
 
 
 

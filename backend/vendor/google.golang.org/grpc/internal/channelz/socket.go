@@ -70,26 +70,18 @@ type EphemeralSocketMetrics struct {
 	RemoteFlowControlWindow int64
 }
 
-<<<<<<< HEAD
 // SocketType represents the type of socket.
 type SocketType string
 
 // SocketType can be one of these.
-=======
-type SocketType string
-
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 const (
 	SocketTypeNormal = "NormalSocket"
 	SocketTypeListen = "ListenSocket"
 )
 
-<<<<<<< HEAD
 // Socket represents a socket within channelz which includes socket
 // metrics and data related to socket activity and provides methods
 // for managing and interacting with sockets.
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 type Socket struct {
 	Entity
 	SocketType       SocketType
@@ -113,11 +105,8 @@ type Socket struct {
 	Security credentials.ChannelzSecurityValue
 }
 
-<<<<<<< HEAD
 // String returns a string representation of the Socket, including its parent
 // entity, socket type, and ID.
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 func (ls *Socket) String() string {
 	return fmt.Sprintf("%s %s #%d", ls.Parent, ls.SocketType, ls.ID)
 }

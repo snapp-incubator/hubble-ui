@@ -6,10 +6,10 @@ package option
 const (
 	PolicyTracing        = "PolicyTracing"
 	ConntrackAccounting  = "ConntrackAccounting"
-	ConntrackLocal       = "ConntrackLocal"
 	Debug                = "Debug"
 	DebugLB              = "DebugLB"
 	DebugPolicy          = "DebugPolicy"
+	DebugTagged          = "DebugTagged"
 	DropNotify           = "DropNotification"
 	TraceNotify          = "TraceNotification"
 	TraceSockNotify      = "TraceSockNotification"
@@ -30,13 +30,6 @@ var (
 		Requires:    nil,
 	}
 
-	specConntrackLocal = Option{
-		Define:      "CONNTRACK_LOCAL",
-		Description: "Use endpoint dedicated tracking table instead of global one",
-		Requires:    nil,
-		Deprecated:  true,
-	}
-
 	specDebug = Option{
 		Define:      "DEBUG",
 		Description: "Enable debugging trace statements",
@@ -50,6 +43,11 @@ var (
 	specDebugPolicy = Option{
 		Define:      "POLICY_DEBUG",
 		Description: "Enable debugging trace statements for policy enforcement",
+	}
+
+	specDebugTagged = Option{
+		Define:      "DEBUG_TAGGED",
+		Description: "Enable debugging trace statements for tagged packets",
 	}
 
 	specDropNotify = Option{

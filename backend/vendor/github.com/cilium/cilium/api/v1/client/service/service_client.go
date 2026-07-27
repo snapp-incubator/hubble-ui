@@ -59,62 +59,18 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	DeleteServiceID(params *DeleteServiceIDParams, opts ...ClientOption) (*DeleteServiceIDOK, error)
-
 	GetLrp(params *GetLrpParams, opts ...ClientOption) (*GetLrpOK, error)
 
 	GetService(params *GetServiceParams, opts ...ClientOption) (*GetServiceOK, error)
 
-	GetServiceID(params *GetServiceIDParams, opts ...ClientOption) (*GetServiceIDOK, error)
-
-	PutServiceID(params *PutServiceIDParams, opts ...ClientOption) (*PutServiceIDOK, *PutServiceIDCreated, error)
-
 	SetTransport(transport runtime.ClientTransport)
-}
-
-/*
-DeleteServiceID deletes a service
-*/
-func (a *Client) DeleteServiceID(params *DeleteServiceIDParams, opts ...ClientOption) (*DeleteServiceIDOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewDeleteServiceIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "DeleteServiceID",
-		Method:             "DELETE",
-		PathPattern:        "/service/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &DeleteServiceIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*DeleteServiceIDOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteServiceID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
 }
 
 /*
 GetLrp retrieves list of all local redirect policies
 */
 func (a *Client) GetLrp(params *GetLrpParams, opts ...ClientOption) (*GetLrpOK, error) {
-	// TODO: Validate the params before sending
+	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetLrpParams()
 	}
@@ -133,17 +89,22 @@ func (a *Client) GetLrp(params *GetLrpParams, opts ...ClientOption) (*GetLrpOK, 
 	for _, opt := range opts {
 		opt(op)
 	}
-
 	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
+
+	// only one success response has to be checked
 	success, ok := result.(*GetLrpOK)
 	if ok {
 		return success, nil
 	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetLrp: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
@@ -152,7 +113,7 @@ func (a *Client) GetLrp(params *GetLrpParams, opts ...ClientOption) (*GetLrpOK, 
 GetService retrieves list of all services
 */
 func (a *Client) GetService(params *GetServiceParams, opts ...ClientOption) (*GetServiceOK, error) {
-	// TODO: Validate the params before sending
+	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetServiceParams()
 	}
@@ -171,95 +132,23 @@ func (a *Client) GetService(params *GetServiceParams, opts ...ClientOption) (*Ge
 	for _, opt := range opts {
 		opt(op)
 	}
-
 	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
+
+	// only one success response has to be checked
 	success, ok := result.(*GetServiceOK)
 	if ok {
 		return success, nil
 	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-GetServiceID retrieves configuration of a service
-*/
-func (a *Client) GetServiceID(params *GetServiceIDParams, opts ...ClientOption) (*GetServiceIDOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetServiceIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "GetServiceID",
-		Method:             "GET",
-		PathPattern:        "/service/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetServiceIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetServiceIDOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetServiceID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-PutServiceID creates or update service
-*/
-func (a *Client) PutServiceID(params *PutServiceIDParams, opts ...ClientOption) (*PutServiceIDOK, *PutServiceIDCreated, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewPutServiceIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PutServiceID",
-		Method:             "PUT",
-		PathPattern:        "/service/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &PutServiceIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, nil, err
-	}
-	switch value := result.(type) {
-	case *PutServiceIDOK:
-		return value, nil, nil
-	case *PutServiceIDCreated:
-		return nil, value, nil
-	}
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for service: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

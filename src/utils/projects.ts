@@ -1,49 +1,39 @@
 import axios from 'axios';
 
-export interface user {
+export interface UserProjects {
   username: string;
-  projects: Array<string>;
+  projects: string[];
 }
 
 export class Projects {
   private static instance: Projects;
-
-  private projects: Array<string> | null = null;
+  private projects: string[] | null = null;
 
   public static getInstance(): Projects {
     if (!Projects.instance) {
       Projects.instance = new Projects();
     }
-
     return Projects.instance;
   }
 
-  getProjects(): Array<string> | null {
+  getProjects(): string[] | null {
     return this.projects;
   }
 
-  manipulateUrl(url: string): string {
-    const regex = /hubble/;
-    const match: boolean = regex.test(url);
-    if (match) {
-      return url.replace('hubble', 'hubble-middleware');
-    }
-    return url;
+  private buildMiddlewareUrl(): string {
+    const url = new URL(window.location.origin);
+    url.hostname = url.hostname.replace(/\bhubble\b/, 'hubble-middleware');
+    return `${url.origin}/projects`;
   }
 
-  async setProjects(token: string) {
-    const headers = {
-      Authorization: 'Bearer ' + token,
-    };
-
-    const baseUrl = this.manipulateUrl(window.location.origin);
-
-    const url = baseUrl + '/projects';
-
-    const res = await axios.get<user>(url, { headers });
-
-    console.log(res.data.projects);
-    console.log(res.data.toString());
+  async setProjects(token: string): Promise<void> {
+    const url = this.buildMiddlewareUrl();
+    const res = await axios.get<UserProjects>(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!Array.isArray(res.data?.projects)) {
+      throw new Error('Invalid response from projects API');
+    }
     this.projects = res.data.projects;
   }
 }

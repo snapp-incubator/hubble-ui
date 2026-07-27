@@ -20,8 +20,6 @@ import (
 
 // ClockSource Status of BPF clock source
 //
-// +k8s:deepcopy-gen=true
-//
 // swagger:model ClockSource
 type ClockSource struct {
 
@@ -47,7 +45,7 @@ func (m *ClockSource) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-var clockSourceTypeModePropEnum []interface{}
+var clockSourceTypeModePropEnum []any
 
 func init() {
 	var res []string

@@ -11,18 +11,11 @@ import (
 
 	"google.golang.org/protobuf/internal/editiondefaults"
 	"google.golang.org/protobuf/internal/filedesc"
-<<<<<<< HEAD
 	"google.golang.org/protobuf/internal/genid"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/gofeaturespb"
-=======
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
-	gofeaturespb "google.golang.org/protobuf/types/gofeaturespb"
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 )
 
 var defaults = &descriptorpb.FeatureSetDefaults{}
@@ -51,11 +44,10 @@ func toEditionProto(ed filedesc.Edition) descriptorpb.Edition {
 		return descriptorpb.Edition_EDITION_PROTO3
 	case filedesc.Edition2023:
 		return descriptorpb.Edition_EDITION_2023
-<<<<<<< HEAD
 	case filedesc.Edition2024:
 		return descriptorpb.Edition_EDITION_2024
-=======
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
+	case filedesc.EditionUnstable:
+		return descriptorpb.Edition_EDITION_UNSTABLE
 	default:
 		panic(fmt.Sprintf("unknown value for edition: %v", ed))
 	}
@@ -68,7 +60,7 @@ func getFeatureSetFor(ed filedesc.Edition) *descriptorpb.FeatureSet {
 		return def
 	}
 	edpb := toEditionProto(ed)
-	if defaults.GetMinimumEdition() > edpb || defaults.GetMaximumEdition() < edpb {
+	if (defaults.GetMinimumEdition() > edpb || defaults.GetMaximumEdition() < edpb) && edpb != descriptorpb.Edition_EDITION_UNSTABLE {
 		// This should never happen protodesc.(FileOptions).New would fail when
 		// initializing the file descriptor.
 		// This most likely means the embedded defaults were not updated.
@@ -136,7 +128,6 @@ func mergeEditionFeatures(parentDesc protoreflect.Descriptor, child *descriptorp
 		parentFS.IsJSONCompliant = *jf == descriptorpb.FeatureSet_ALLOW
 	}
 
-<<<<<<< HEAD
 	// We must not use proto.GetExtension(child, gofeaturespb.E_Go)
 	// because that only works for messages we generated, but not for
 	// dynamicpb messages. See golang/protobuf#1669.
@@ -174,12 +165,6 @@ func mergeEditionFeatures(parentDesc protoreflect.Descriptor, child *descriptorp
 		fd.Kind() == protoreflect.EnumKind &&
 		gf.Has(fd) {
 		parentFS.APILevel = int(gf.Get(fd).Enum())
-=======
-	if goFeatures, ok := proto.GetExtension(child, gofeaturespb.E_Go).(*gofeaturespb.GoFeatures); ok && goFeatures != nil {
-		if luje := goFeatures.LegacyUnmarshalJsonEnum; luje != nil {
-			parentFS.GenerateLegacyUnmarshalJSON = *luje
-		}
->>>>>>> dc30ffe8 (feat: add port filter option alongside Multitenancy and bug fixes)
 	}
 
 	return parentFS

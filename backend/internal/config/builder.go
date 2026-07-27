@@ -1,13 +1,15 @@
 package config
 
 import (
+	"log/slog"
+
 	"github.com/cilium/cilium/pkg/crypto/certloader"
+	"github.com/cilium/cilium/pkg/logging"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 type ConfigBuilder struct {
-	logger *logrus.Logger
+	logger *slog.Logger
 	props  PropGetters
 }
 
@@ -42,7 +44,58 @@ func (b *ConfigBuilder) Build() (*Config, error) {
 		return nil, err
 	}
 
+	if err := b.initDex(cfg); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
+}
+
+func (b *ConfigBuilder) initDex(cfg *Config) error {
+	// NOTE: Dex authentication is enabled by the presence of the Dex issuer
+	// address; without it the backend serves the API unauthenticated, exactly
+	// like upstream
+	addr := b.props.DexAddr()
+	if err := addr.Err(); err != nil {
+		return err
+	}
+
+	cfg.DexEnabled = addr.Value != ""
+	if !cfg.DexEnabled {
+		return nil
+	}
+
+	hubbleURL := b.props.DexHubbleURL()
+	if err := hubbleURL.Err(); err != nil {
+		return err
+	}
+
+	clientID := b.props.DexClientID()
+	if err := clientID.Err(); err != nil {
+		return err
+	}
+
+	secret := b.props.DexSecret()
+	if err := secret.Err(); err != nil {
+		return err
+	}
+
+	jwtExpiration := b.props.DexJWTExpiration()
+	if err := jwtExpiration.Err(); err != nil {
+		return err
+	}
+
+	jwtExpiration.LogIfFallback(b.logger)
+
+	cfg.DexAddr = addr.Value
+	cfg.DexHubbleURL = hubbleURL.Value
+	cfg.DexClientID = clientID.Value
+	cfg.DexSecret = secret.Value
+	cfg.DexJWTExpiration = jwtExpiration.Value
+
+	b.logger.Info("dex authentication is enabled", "issuer", addr.Value)
+
+	return nil
 }
 
 func (b *ConfigBuilder) initLogger() error {
@@ -56,10 +109,8 @@ func (b *ConfigBuilder) initLogger() error {
 	}
 
 	if debugLogsEnabled.Value {
-		b.logger.SetLevel(logrus.DebugLevel)
-		b.logger.Info("debug logs enabled")
-	} else {
-		b.logger.SetLevel(logrus.InfoLevel)
+		logging.SetLogLevelToDebug()
+		b.logger.Debug("debug logs enabled")
 	}
 
 	return nil
@@ -82,7 +133,7 @@ func (b *ConfigBuilder) initGOPS(cfg *Config) error {
 	}
 
 	port.LogIfFallback(b.logger)
-	b.logger.WithField("port", port.Value).Info("gops is enabled")
+	b.logger.Info("gops is enabled", "port", port.Value)
 
 	cfg.GOPSEnabled = isEnabled.Value
 	cfg.GOPSPort = int(port.Value)
@@ -158,8 +209,9 @@ func (b ConfigBuilder) initTLSToRelay(cfg *Config) error {
 	cfg.TLSRelayClientCertFile = clientCert.Value
 	cfg.TLSRelayClientKeyFile = clientKey.Value
 
+	slogLogger := logging.DefaultSlogLogger.With(slog.String("component", "tls-config-watcher"))
 	relayClientConfig, err := certloader.NewWatchedClientConfig(
-		b.logger.WithField("component", "tls-config-watcher"),
+		slogLogger,
 		cfg.TLSRelayCACertFiles,
 		cfg.TLSRelayClientCertFile,
 		cfg.TLSRelayClientKeyFile,
@@ -170,12 +222,11 @@ func (b ConfigBuilder) initTLSToRelay(cfg *Config) error {
 	}
 
 	cfg.relayClientConfig = relayClientConfig
-	b.logger.
-		WithField("ca-certs", cfg.TLSRelayCACertFiles).
-		WithField("client-cert", cfg.TLSRelayClientCertFile).
-		WithField("client-key", cfg.TLSRelayClientKeyFile).
-		WithField("server-name", cfg.TLSRelayServerName).
-		Info("initialized with TLS to hubble-relay enabled")
+	b.logger.Info("initialized with TLS to hubble-relay enabled",
+		"ca-certs", cfg.TLSRelayCACertFiles,
+		"client-cert", cfg.TLSRelayClientCertFile,
+		"client-key", cfg.TLSRelayClientKeyFile,
+		"server-name", cfg.TLSRelayServerName)
 
 	return nil
 }

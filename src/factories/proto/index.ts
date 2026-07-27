@@ -134,6 +134,8 @@ export class ProtoFactory {
     const blDstIdentities: number[] = [];
     const blSrcPods: string[] = [];
     const blDstPods: string[] = [];
+    const blSrcPorts: string[] = [];
+    const blDstPorts: string[] = [];
     filters?.filters
       ?.filter(filter => filter.negative)
       .forEach(filter => {
@@ -162,6 +164,11 @@ export class ProtoFactory {
           case FilterKind.Pod: {
             filter.fromRequired && blSrcPods.push(query);
             filter.toRequired && blDstPods.push(query);
+            break;
+          }
+          case FilterKind.Port: {
+            filter.fromRequired && blSrcPorts.push(query);
+            filter.toRequired && blDstPorts.push(query);
           }
         }
       });
@@ -174,7 +181,7 @@ export class ProtoFactory {
 
     if (blDstIps.length) {
       const blDstIpFilter = flowpb.FlowFilter.create();
-      blSrcIps.forEach(e => blDstIpFilter.destinationIp.push(e));
+      blDstIps.forEach(e => blDstIpFilter.destinationIp.push(e));
       blFilters.push(blDstIpFilter);
     }
 
@@ -201,6 +208,18 @@ export class ProtoFactory {
       const blDstPodFilter = flowpb.FlowFilter.create();
       blDstPods.forEach(e => blDstPodFilter.destinationPod.push(`${namespace}/${e}`));
       blFilters.push(blDstPodFilter);
+    }
+
+    if (blSrcPorts.length) {
+      const blSrcPortFilter = flowpb.FlowFilter.create();
+      blSrcPorts.forEach(e => blSrcPortFilter.sourcePort.push(e));
+      blFilters.push(blSrcPortFilter);
+    }
+
+    if (blDstPorts.length) {
+      const blDstPortFilter = flowpb.FlowFilter.create();
+      blDstPorts.forEach(e => blDstPortFilter.destinationPort.push(e));
+      blFilters.push(blDstPortFilter);
     }
 
     return blFilters;
@@ -293,6 +312,11 @@ export class ProtoFactory {
           fromInside.sourceWorkload.push(workload);
           break;
         }
+        case FilterKind.Port: {
+          toInside.sourcePort.push(query);
+          fromInside.sourcePort.push(query);
+          break;
+        }
       }
 
       wlFilters.push(toInside, fromInside);
@@ -345,6 +369,11 @@ export class ProtoFactory {
 
           toInside.destinationWorkload.push(workload);
           fromInside.destinationWorkload.push(workload);
+          break;
+        }
+        case FilterKind.Port: {
+          fromInside.destinationPort.push(query);
+          toInside.destinationPort.push(query);
           break;
         }
       }

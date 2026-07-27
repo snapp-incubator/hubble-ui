@@ -10,6 +10,7 @@ package endpoint
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"io"
 
@@ -23,7 +24,7 @@ type DeleteEndpointReader struct {
 }
 
 // ReadResponse reads a server response into the received o.
-func (o *DeleteEndpointReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
+func (o *DeleteEndpointReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
 	switch response.Code() {
 	case 200:
 		result := NewDeleteEndpointOK()
@@ -51,6 +52,12 @@ func (o *DeleteEndpointReader) ReadResponse(response runtime.ClientResponse, con
 		return nil, result
 	case 429:
 		result := NewDeleteEndpointTooManyRequests()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 503:
+		result := NewDeleteEndpointServiceUnavailable()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -177,7 +184,7 @@ func (o *DeleteEndpointErrors) GetPayload() int64 {
 func (o *DeleteEndpointErrors) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -348,6 +355,62 @@ func (o *DeleteEndpointTooManyRequests) String() string {
 }
 
 func (o *DeleteEndpointTooManyRequests) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewDeleteEndpointServiceUnavailable creates a DeleteEndpointServiceUnavailable with default headers values
+func NewDeleteEndpointServiceUnavailable() *DeleteEndpointServiceUnavailable {
+	return &DeleteEndpointServiceUnavailable{}
+}
+
+/*
+DeleteEndpointServiceUnavailable describes a response with status code 503, with default header values.
+
+Service Unavailable
+*/
+type DeleteEndpointServiceUnavailable struct {
+}
+
+// IsSuccess returns true when this delete endpoint service unavailable response has a 2xx status code
+func (o *DeleteEndpointServiceUnavailable) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this delete endpoint service unavailable response has a 3xx status code
+func (o *DeleteEndpointServiceUnavailable) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this delete endpoint service unavailable response has a 4xx status code
+func (o *DeleteEndpointServiceUnavailable) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this delete endpoint service unavailable response has a 5xx status code
+func (o *DeleteEndpointServiceUnavailable) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this delete endpoint service unavailable response a status code equal to that given
+func (o *DeleteEndpointServiceUnavailable) IsCode(code int) bool {
+	return code == 503
+}
+
+// Code gets the status code for the delete endpoint service unavailable response
+func (o *DeleteEndpointServiceUnavailable) Code() int {
+	return 503
+}
+
+func (o *DeleteEndpointServiceUnavailable) Error() string {
+	return fmt.Sprintf("[DELETE /endpoint][%d] deleteEndpointServiceUnavailable", 503)
+}
+
+func (o *DeleteEndpointServiceUnavailable) String() string {
+	return fmt.Sprintf("[DELETE /endpoint][%d] deleteEndpointServiceUnavailable", 503)
+}
+
+func (o *DeleteEndpointServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

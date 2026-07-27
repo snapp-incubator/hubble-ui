@@ -15,22 +15,25 @@ import (
 // +kubebuilder:resource:categories={cilium,ciliumbgp},singular="ciliumbgpclusterconfig",path="ciliumbgpclusterconfigs",scope="Cluster",shortName={cbgpcluster}
 // +kubebuilder:printcolumn:JSONPath=".metadata.creationTimestamp",name="Age",type=date
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
+// +kubebuilder:deprecatedversion
 
 // CiliumBGPClusterConfig is the Schema for the CiliumBGPClusterConfig API
 type CiliumBGPClusterConfig struct {
 	// +deepequal-gen=false
 	metav1.TypeMeta `json:",inline"`
 	// +deepequal-gen=false
+	// +kubebuilder:validation:Required
 	metav1.ObjectMeta `json:"metadata"`
 
 	// Spec defines the desired cluster configuration of the BGP control plane.
+	//
+	// +kubebuilder:validation:Required
 	Spec CiliumBGPClusterConfigSpec `json:"spec"`
 
 	// Status is a running status of the cluster configuration
 	//
 	// +kubebuilder:validation:Optional
-	Status CiliumBGPClusterConfigStatus `json:"status"`
+	Status CiliumBGPClusterConfigStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -82,6 +85,15 @@ type CiliumBGPInstance struct {
 	// +kubebuilder:validation:Maximum=4294967295
 	LocalASN *int64 `json:"localASN,omitempty"`
 
+	// LocalPort is the port on which the BGP daemon listens for incoming connections.
+	//
+	// If not specified, BGP instance will not listen for incoming connections.
+	//
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	LocalPort *int32 `json:"localPort,omitempty"`
+
 	// Peers is a list of neighboring BGP peers for this virtual router
 	//
 	// +kubebuilder:validation:Optional
@@ -131,14 +143,14 @@ type PeerConfigReference struct {
 	//
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="cilium.io"
-	Group string `json:"group"`
+	Group string `json:"group,omitempty"`
 
 	// Kind is the kind of the peer config resource.
 	// If not specified, the default of "CiliumBGPPeerConfig" is used.
 	//
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="CiliumBGPPeerConfig"
-	Kind string `json:"kind"`
+	Kind string `json:"kind,omitempty"`
 
 	// Name is the name of the peer config resource.
 	// Name refers to the name of a Kubernetes object (typically a CiliumBGPPeerConfig).
@@ -150,7 +162,7 @@ type PeerConfigReference struct {
 type CiliumBGPClusterConfigStatus struct {
 	// The current conditions of the CiliumBGPClusterConfig
 	//
-	// +optional
+	// +kubebuilder:validation:Optional
 	// +listType=map
 	// +listMapKey=type
 	// +deepequal-gen=false

@@ -20,8 +20,6 @@ import (
 
 // Srv6 Status of the SRv6
 //
-// +k8s:deepcopy-gen=true
-//
 // swagger:model Srv6
 type Srv6 struct {
 
@@ -47,7 +45,7 @@ func (m *Srv6) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-var srv6TypeSrv6EncapModePropEnum []interface{}
+var srv6TypeSrv6EncapModePropEnum []any
 
 func init() {
 	var res []string

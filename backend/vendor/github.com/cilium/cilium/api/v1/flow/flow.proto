@@ -17,6 +17,9 @@ message Flow {
     // uuid is a universally unique identifier for this flow.
     string uuid = 34;
 
+    // emitter identifies the source that emitted the flow.
+    Emitter emitter = 41;
+
     Verdict verdict = 2;
     // only applicable to Verdict = DROPPED.
     // deprecated in favor of drop_reason_desc.
@@ -32,6 +35,8 @@ message Flow {
     IP IP = 5;
     // l4
     Layer4 l4 = 6;
+
+    Tunnel tunnel = 39;
 
     reserved 7; // removed, do not use
 
@@ -85,6 +90,9 @@ message Flow {
     // Verdict = DROPPED.
     FileInfo file = 38;
 
+    // IPTraceID relates to the trace ID in the IP options of a packet.
+    IPTraceID ip_trace_id = 40;
+
     // only applicable to Verdict = DROPPED.
     DropReason drop_reason_desc = 25;
 
@@ -137,6 +145,27 @@ message Flow {
     repeated Policy egress_denied_by = 21004;
     // The CiliumNetworkPolicies denying the ingress of the flow.
     repeated Policy ingress_denied_by = 21005;
+
+    // The set of Log values for policies that matched this flow.
+    // If no matched policies have an explicit log value configured,
+    // this list is empty. Duplicate values are elided; each
+    // entry is unique.
+    repeated string policy_log = 21006;
+
+    // Aggregate contains flow aggregation counters when flow aggregation is enabled.
+    // This field is only populated for aggregated flows.
+    Aggregate aggregate = 21007;
+}
+
+// Emitter identifies the source that emits a Hubble flow.
+message Emitter {
+    // name identifies the emitter.
+    // The name should be capitalized ("Hubble", not "hubble" nor "HUBBLE").
+    string name = 1;
+    // version identifiers the emitter version.
+    // The version should not contain a 'v' prefix as sometimes seen ("1.19.0",
+    // not "v1.19.0").
+    string version = 2;
 }
 
 enum FlowType {
@@ -199,7 +228,7 @@ enum TraceObservationPoint {
     // TO_CRYPTO indicates network packets are transmitted towards the crypto
     // process for encryption.
     TO_CRYPTO = 13;
-    
+
 }
 
 enum TraceReason {
@@ -211,7 +240,7 @@ enum TraceReason {
     REOPENED = 5 [deprecated=true];
     SRV6_ENCAP = 6;
     SRV6_DECAP = 7;
-    ENCRYPT_OVERLAY = 8;
+    ENCRYPT_OVERLAY = 8 [deprecated=true];
 }
 
 message FileInfo {
@@ -227,6 +256,8 @@ message Layer4 {
         ICMPv4 ICMPv4 = 3;
         ICMPv6 ICMPv6 = 4;
         SCTP SCTP = 5;
+        VRRP VRRP = 6;
+        IGMP IGMP = 7;
     }
 }
 
@@ -247,7 +278,7 @@ message Layer7 {
     oneof record {
         DNS dns = 100;
         HTTP http = 101;
-        Kafka kafka = 102;
+        Kafka kafka = 102 [deprecated = true];
     }
 }
 
@@ -338,10 +369,34 @@ message ICMPv6 {
     uint32 code = 2;
 }
 
+message VRRP {
+    uint32 type = 1;
+    uint32 vrid = 2;
+    uint32 priority = 3;
+}
+
+message IGMP {
+    uint32 type = 1;
+    string group_address = 2;
+}
+
 enum IPVersion {
     IP_NOT_USED = 0;
     IPv4 = 1;
     IPv6 = 2;
+}
+
+message Tunnel {
+    enum Protocol {
+        UNKNOWN = 0;
+        VXLAN = 1;
+        GENEVE = 2;
+    }
+
+    Protocol protocol = 1;
+    IP IP = 2;
+    Layer4 l4 = 3;
+    uint32 vni = 4;
 }
 
 enum Verdict {
@@ -456,6 +511,8 @@ enum DropReason {
     // An Egress Gateway node matched a packet against an Egress Gateway policy
     // that didn't select a valid Egress IP.
     DROP_NO_EGRESS_IP = 204;
+    // Punt packet to a user space proxy.
+    DROP_PUNT_PROXY = 205;
 }
 
 enum TrafficDirection {
@@ -618,6 +675,13 @@ message FlowFilter {
 
     // trace_id filters flows by trace ID
     repeated string trace_id = 28;
+    // ip_trace_id filters flows by IPTraceID
+    repeated uint64 ip_trace_id = 39;
+
+    // encrypted filters flows based on encryption status (WireGuard/IPsec).
+    // When set to true, only encrypted flows are returned.
+    // When set to false, only unencrypted flows are returned.
+    repeated bool encrypted = 40;
 
     // Experimental contains filters that are not stable yet. Support for
     // experimental features is always optional and subject to change.
@@ -687,6 +751,7 @@ message HTTP {
 
 // L7 information for Kafka flows. It corresponds to Cilium's [accesslog.LogRecordKafka](https://github.com/cilium/cilium/blob/728c79e427438ab6f8d9375b62fccd6fed4ace3a/pkg/proxy/accesslog/record.go#L229) type.
 message Kafka {
+    option deprecated = true;
     int32 error_code = 1;
     int32 api_version = 2;
     string api_key = 3;
@@ -697,6 +762,11 @@ message Kafka {
 message Service {
     string name = 1;
     string namespace = 2;
+}
+
+message IPTraceID {
+    uint64 trace_id = 1;
+    uint32 ip_option_type = 2;
 }
 
 enum LostEventSource {
@@ -725,6 +795,10 @@ message LostEvent {
     // cpu on which the event was lost if the source of lost events is
     // PERF_EVENT_RING_BUFFER.
     google.protobuf.Int32Value cpu = 3;
+    // first is the timestamp of the first event that was lost.
+    google.protobuf.Timestamp first = 4;
+    // last is the timestamp of the last event that was lost.
+    google.protobuf.Timestamp last = 5;
 }
 
 // AgentEventType is the type of agent event. These values are shared with type
@@ -743,8 +817,8 @@ enum AgentEventType {
     ENDPOINT_DELETED = 8;
     IPCACHE_UPSERTED = 9;
     IPCACHE_DELETED = 10;
-    SERVICE_UPSERTED = 11;
-    SERVICE_DELETED = 12;
+    SERVICE_UPSERTED = 11 [deprecated = true];
+    SERVICE_DELETED = 12 [deprecated = true];
 }
 
 message AgentEvent {
@@ -760,8 +834,8 @@ message AgentEvent {
         EndpointUpdateNotification endpoint_update = 104;
         // used for IPCACHE_UPSERTED and IPCACHE_DELETED
         IPCacheNotification ipcache_update = 105;
-        ServiceUpsertNotification service_upsert = 106;
-        ServiceDeleteNotification service_delete = 107;
+        ServiceUpsertNotification service_upsert = 106 [deprecated = true];
+        ServiceDeleteNotification service_delete = 107 [deprecated = true];
     }
 }
 
@@ -806,11 +880,15 @@ message IPCacheNotification {
 }
 
 message ServiceUpsertNotificationAddr {
+    option deprecated = true;
+
     string ip = 1;
     uint32 port = 2;
 }
 
 message ServiceUpsertNotification {
+    option deprecated = true;
+
     uint32 id = 1;
     ServiceUpsertNotificationAddr frontend_address = 2;
     repeated ServiceUpsertNotificationAddr backend_addresses = 3;
@@ -823,6 +901,8 @@ message ServiceUpsertNotification {
 }
 
 message ServiceDeleteNotification {
+    option deprecated = true;
+
     uint32 id = 1;
 }
 
@@ -920,4 +1000,18 @@ enum DebugEventType {
     DBG_SK_ASSIGN = 64;
     DBG_L7_LB = 65;
     DBG_SKIP_POLICY = 66;
+    DBG_LB6_LOOPBACK_SNAT = 67;
+    DBG_LB6_LOOPBACK_SNAT_REV = 68;
+}
+
+// Aggregate contains flow aggregation counters
+message Aggregate {
+    // ingress_flow_count is the count of flows in the ingress direction
+    uint32 ingress_flow_count = 1;
+
+    // egress_flow_count is the count of flows in the egress direction  
+    uint32 egress_flow_count = 2;
+
+    // unknown_direction_flow_count is the count of flows with unknown traffic direction
+    uint32 unknown_direction_flow_count = 3;
 }

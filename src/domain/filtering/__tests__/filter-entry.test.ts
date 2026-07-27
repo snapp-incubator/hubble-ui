@@ -132,4 +132,21 @@ describe('correct strings parsing', () => {
     'app-dep',
     'dep',
   );
+
+  parse('correct 23', 'either:port=80', true, FilterDirection.Either, FilterKind.Port, '80');
+
+  parse('correct 24', 'from:port=8080', true, FilterDirection.From, FilterKind.Port, '8080');
+
+  parse('correct 25', 'to:port=443', true, FilterDirection.To, FilterKind.Port, '443');
+
+  parse(
+    'correct 26',
+    '!to:port=443',
+    true,
+    FilterDirection.To,
+    FilterKind.Port,
+    '443',
+    undefined,
+    true,
+  );
 });

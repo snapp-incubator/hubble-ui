@@ -1,119 +1,164 @@
+// Package middleware implements the Dex (OIDC) login flow that makes
+// a multi-tenant hubble-ui deployment possible: every request to the API
+// must carry a signed JWT in the "token" cookie, which the frontend also
+// forwards to hubble-middleware to resolve the namespaces the user is
+// authorized to see.
 package middleware
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
-	"strconv"
+	"sync"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-
-	"github.com/cilium/hubble-ui/backend/internal/config"
-	"github.com/cilium/hubble-ui/backend/pkg/logger"
 )
 
-var (
-	log       = logger.New("dex-login")
-	serverErr = errors.New("server_error")
-)
+const tokenCookieName = "token"
 
-type (
-	DexAuthHandler struct {
-		cfg config.Dex
-	}
-
-	user struct {
-		ID            string  `bson:"_id,omitempty" json:"_id"`
-		UserName      string  `bson:"username,omitempty" json:"username"`
-		Email         string  `bson:"email,omitempty" json:"email,omitempty"`
-		Name          string  `bson:"name,omitempty" json:"name,omitempty"`
-		CreatedAt     *string `bson:"created_at,omitempty" json:"created_at,omitempty"`
-		UpdatedAt     *string `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
-		DeactivatedAt *string `bson:"deactivated_at,omitempty" json:"deactivated_at,omitempty"`
-	}
-)
-
-func NewDex(cfg config.Dex) *DexAuthHandler {
-	return &DexAuthHandler{cfg: cfg}
+type Config struct {
+	// Addr is the URL of the Dex issuer, e.g. https://dex.example.com
+	Addr string
+	// HubbleURL is the external URL of hubble-ui the user is redirected
+	// back to after a successful login
+	HubbleURL string
+	ClientID  string
+	Secret    string
+	// JWTExpiration bounds both the login flow state token and the session
+	// token lifetime
+	JWTExpiration time.Duration
 }
 
-func (h DexAuthHandler) AuthMiddleware(next http.HandlerFunc) http.Handler {
+type DexAuthHandler struct {
+	log *slog.Logger
+	cfg Config
+
+	mx       sync.Mutex
+	provider *oidc.Provider
+}
+
+func NewDex(log *slog.Logger, cfg Config) *DexAuthHandler {
+	return &DexAuthHandler{
+		log: log,
+		cfg: cfg,
+	}
+}
+
+func (h *DexAuthHandler) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-		log.Debugf(
-			"auth middleware called with path: %s, method: %s, origin: %s",
-			req.URL.Path,
-			req.Method,
-			req.Header.Get("Origin"),
-		)
-
-		jwtToken, exp := h.dexCallBack(req)
-
-		if jwtToken != "" {
-			http.SetCookie(resp, &http.Cookie{
-				Name:       "token",
-				Value:      jwtToken,
-				Expires:    *exp,
-				Path:       "/",
-				RawExpires: exp.String(),
-				Secure:     true,
+		// NOTE: OAuth callback from Dex: exchange the code for a session
+		// token and redirect back to the UI
+		if jwtToken, exp := h.dexCallback(req); jwtToken != "" {
+			// NOTE: The cookie cannot be HttpOnly: the frontend reads it to
+			// authorize its requests to hubble-middleware
+			http.SetCookie(resp, &http.Cookie{ //nolint:gosec
+				Name:     tokenCookieName,
+				Value:    jwtToken,
+				Expires:  *exp,
+				Path:     "/",
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
 			})
+
 			http.Redirect(resp, req, h.cfg.HubbleURL, http.StatusFound)
 			return
 		}
 
-		token, err := req.Cookie("token")
-		if err == nil && token.Value != "" {
-			log.Debugf("token was set and serving next")
+		if cookie, err := req.Cookie(tokenCookieName); err == nil && h.isValidSessionToken(cookie.Value) {
 			next.ServeHTTP(resp, req)
 			return
 		}
 
-		dexToken, err := h.generateOAuthJWT()
+		// NOTE: No valid session: start the login flow with a signed state
+		// token so the callback can be validated
+		state, err := h.generateStateJWT()
 		if err != nil {
-			log.Error(err)
-
-			http.Error(resp, serverErr.Error(), http.StatusInternalServerError)
+			h.log.Error("failed to generate OAuth state token", "error", err)
+			http.Error(resp, "server_error", http.StatusInternalServerError)
 			return
 		}
 
-		cfg, _, err := h.oAuthDexConfig(req.Context())
+		oauthCfg, _, err := h.oauthDexConfig(req.Context())
 		if err != nil {
-			log.Error(err)
-			http.Error(resp, serverErr.Error(), http.StatusInternalServerError)
+			h.log.Error("failed to initialize OIDC provider", "error", err)
+			http.Error(resp, "server_error", http.StatusInternalServerError)
 			return
 		}
 
-		url := cfg.AuthCodeURL(dexToken)
-		http.Redirect(resp, req, url, http.StatusFound)
+		http.Redirect(resp, req, oauthCfg.AuthCodeURL(state), http.StatusFound)
 	})
 }
 
-func (h DexAuthHandler) generateOAuthJWT() (string, error) {
-	token := jwt.New(jwt.SigningMethodHS512)
-	claims := token.Claims.(jwt.MapClaims)
-
-	exp := time.Now().Add(h.cfg.JWTExpiration)
-	claims["exp"] = exp.Unix()
-
-	tokenString, err := token.SignedString([]byte(h.cfg.Secret))
-	if err != nil {
-		logrus.Info(err)
-		return "", err
+func (h *DexAuthHandler) dexCallback(req *http.Request) (string, *time.Time) {
+	state := req.URL.Query().Get("state")
+	if state == "" {
+		return "", nil
 	}
 
-	return tokenString, nil
+	if err := h.validateJWT(state); err != nil {
+		h.log.Info("invalid OAuth state token", "error", err)
+		return "", nil
+	}
+
+	code := req.URL.Query().Get("code")
+	if code == "" {
+		return "", nil
+	}
+
+	oauthCfg, verifier, err := h.oauthDexConfig(req.Context())
+	if err != nil {
+		h.log.Error("failed to initialize OIDC provider", "error", err)
+		return "", nil
+	}
+
+	token, err := oauthCfg.Exchange(req.Context(), code)
+	if err != nil {
+		h.log.Error("OAuth code exchange failed", "error", err)
+		return "", nil
+	}
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		h.log.Error("OAuth error: no id_token in token response")
+		return "", nil
+	}
+
+	idToken, err := verifier.Verify(req.Context(), rawIDToken)
+	if err != nil {
+		h.log.Error("OAuth error: id_token verification failed", "error", err)
+		return "", nil
+	}
+
+	var claims struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Verified bool   `json:"email_verified"`
+	}
+
+	if err := idToken.Claims(&claims); err != nil {
+		h.log.Error("OAuth error: failed to parse id_token claims", "error", err)
+		return "", nil
+	}
+
+	jwtToken, exp, err := h.generateSessionJWT(claims.Email)
+	if err != nil {
+		h.log.Error("failed to sign session token", "error", err)
+		return "", nil
+	}
+
+	return jwtToken, exp
 }
 
-func (h DexAuthHandler) oAuthDexConfig(ctx context.Context) (*oauth2.Config, *oidc.IDTokenVerifier, error) {
-	ctx = oidc.ClientContext(ctx, &http.Client{})
-	provider, err := oidc.NewProvider(ctx, h.cfg.Addr)
+func (h *DexAuthHandler) oauthDexConfig(ctx context.Context) (
+	*oauth2.Config, *oidc.IDTokenVerifier, error,
+) {
+	provider, err := h.getProvider(ctx)
 	if err != nil {
-		log.Errorf("OAuth Error: Something went wrong with OIDC provider %s", err)
 		return nil, nil, err
 	}
 
@@ -126,112 +171,77 @@ func (h DexAuthHandler) oAuthDexConfig(ctx context.Context) (*oauth2.Config, *oi
 	}, provider.Verifier(&oidc.Config{ClientID: h.cfg.ClientID}), nil
 }
 
-func (h DexAuthHandler) dexCallBack(req *http.Request) (string, *time.Time) {
-	incomingState, ok := req.URL.Query()["state"]
-	if !ok || len(incomingState) == 0 {
-		return "", nil
+func (h *DexAuthHandler) getProvider(ctx context.Context) (*oidc.Provider, error) {
+	h.mx.Lock()
+	defer h.mx.Unlock()
+
+	if h.provider != nil {
+		return h.provider, nil
 	}
 
-	validated, err := h.validateOAuthJWT(incomingState[0])
-	if !validated {
-		if err != nil {
-			log.Infof("invalid JWT token, %v", err)
-		}
-		return "", nil
-	}
-
-	cfg, verifier, err := h.oAuthDexConfig(req.Context())
+	provider, err := oidc.NewProvider(ctx, h.cfg.Addr)
 	if err != nil {
-		log.Error(err)
-		return "", nil
+		return nil, err
 	}
 
-	code, ok := req.URL.Query()["code"]
-	if !ok || len(code) == 0 {
-		return "", nil
-	}
-
-	token, err := cfg.Exchange(req.Context(), code[0])
-	if err != nil {
-		log.Error(err)
-		return "", nil
-	}
-
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		log.Error("OAuth Error: no raw id_token found")
-		return "", nil
-	}
-
-	idToken, err := verifier.Verify(req.Context(), rawIDToken)
-	if err != nil {
-		log.Error("OAuth Error: no id_token found")
-		return "", nil
-	}
-
-	var claims struct {
-		ID       string `json:"openid"`
-		Name     string
-		Email    string `json:"email"`
-		Verified bool   `json:"email_verified"`
-	}
-	if err := idToken.Claims(&claims); err != nil {
-		log.Error("OAuth Error: claims not found")
-		return "", nil
-	}
-
-	createdAt := strconv.FormatInt(time.Now().Unix(), 10)
-
-	var userData = &user{
-		ID:        claims.ID,
-		Name:      claims.Name,
-		Email:     claims.Email,
-		UserName:  claims.Email,
-		CreatedAt: &createdAt,
-	}
-
-	jwtToken, exp, err := h.GetSignedJWT(userData)
-	if err != nil {
-		log.Error(err)
-		return "", nil
-	}
-
-	return jwtToken, exp
+	h.provider = provider
+	return provider, nil
 }
 
-func (h DexAuthHandler) validateOAuthJWT(tokenString string) (bool, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, isValid := token.Method.(*jwt.SigningMethodHMAC); !isValid {
-			return nil, fmt.Errorf("invalid token %s", token.Header["alg"])
+func (h *DexAuthHandler) isValidSessionToken(tokenString string) bool {
+	if tokenString == "" {
+		return false
+	}
+
+	if err := h.validateJWT(tokenString); err != nil {
+		h.log.Debug("session token validation failed", "error", err)
+		return false
+	}
+
+	return true
+}
+
+func (h *DexAuthHandler) validateJWT(tokenString string) error {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		if _, isHMAC := token.Method.(*jwt.SigningMethodHMAC); !isHMAC {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
+
 		return []byte(h.cfg.Secret), nil
 	})
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if !token.Valid {
-		return false, err
+		return errors.New("token is not valid")
 	}
 
-	return true, nil
+	return nil
 }
 
-func (h DexAuthHandler) GetSignedJWT(user *user) (string, *time.Time, error) {
+func (h *DexAuthHandler) generateStateJWT() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS512)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["username"] = user.UserName
+	claims["exp"] = time.Now().Add(h.cfg.JWTExpiration).Unix()
+
+	return token.SignedString([]byte(h.cfg.Secret))
+}
+
+func (h *DexAuthHandler) generateSessionJWT(username string) (string, *time.Time, error) {
+	token := jwt.New(jwt.SigningMethodHS512)
+	claims := token.Claims.(jwt.MapClaims)
 
 	iat := time.Now()
 	exp := iat.Add(h.cfg.JWTExpiration)
 
+	claims["username"] = username
 	claims["iat"] = iat.Unix()
 	claims["exp"] = exp.Unix()
 
 	tokenString, err := token.SignedString([]byte(h.cfg.Secret))
 	if err != nil {
-		logrus.Info(err)
 		return "", nil, err
 	}
 

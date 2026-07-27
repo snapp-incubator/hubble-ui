@@ -20,8 +20,6 @@ import (
 
 // CNIChainingStatus Status of CNI chaining
 //
-// +k8s:deepcopy-gen=true
-//
 // swagger:model CNIChainingStatus
 type CNIChainingStatus struct {
 
@@ -44,7 +42,7 @@ func (m *CNIChainingStatus) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-var cNIChainingStatusTypeModePropEnum []interface{}
+var cNIChainingStatusTypeModePropEnum []any
 
 func init() {
 	var res []string
