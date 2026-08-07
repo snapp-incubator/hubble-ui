@@ -1,0 +1,84 @@
+version: 2
+
+# NOTE: upstream cilium/hubble-ui migrated to Renovate and deleted this file.
+# This fork does not have the Renovate GitHub App installed, and
+# .github/renovate.json5 targets a `master` base branch that does not exist
+# here, so that config is inert. Dependency updates run on Dependabot instead.
+#
+# Differences from the upstream config this is derived from:
+#   - `rebase-strategy: disabled` is NOT set. Upstream disables rebasing, which
+#     is what left PRs #21-#30 stranded on a pre-rebase base commit until they
+#     conflicted and had to be closed. Letting Dependabot rebase keeps open PRs
+#     mergeable against main.
+#   - Lower open-PR limits (5 per ecosystem upstream -> 2-3 here), since this
+#     fork has far less review capacity than upstream.
+#   - Labels reduced to ones that exist in this repo.
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+    groups:
+      prod-deps:
+        dependency-type: production
+      dev-deps:
+        dependency-type: development
+
+  - package-ecosystem: gomod
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+    ignore:
+      # Tracks the Cilium version deployed in the cluster; bump deliberately
+      # alongside that upgrade rather than automatically.
+      - dependency-name: github.com/cilium/cilium
+      - dependency-name: github.com/cilium/hubble
+    groups:
+      go-deps:
+        patterns:
+          - '*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+      - ci
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: 'docker:'
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: 'backend/docker:'
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
