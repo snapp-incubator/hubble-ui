@@ -1,8 +1,9 @@
 name: Image CI Build
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  # NOTE: PR builds run on pull_request_target only. A plain pull_request
+  # trigger would double every PR build, and its run takes the branch/tag
+  # code path below, which also pushes the :latest tag from PRs.
   pull_request_target:
     types: [opened, synchronize, reopened]
   push:
