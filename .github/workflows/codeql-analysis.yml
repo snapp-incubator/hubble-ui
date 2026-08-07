@@ -4,12 +4,11 @@ name: codeql
 on:
   push:
     branches:
-      - 'dev-refactor'
-      - 'master'
+      - 'main'
       - 'v*'
   pull_request:
     branches:
-      - 'master'
+      - 'main'
   schedule:
     - cron: '45 7 * * 3'
 
@@ -19,7 +18,7 @@ concurrency:
 
 jobs:
   analyze:
-    if: github.repository == 'cilium/hubble-ui'
+    if: github.repository == 'snapp-incubator/hubble-ui'
     name: Analyze
     runs-on: ubuntu-latest
     permissions:
