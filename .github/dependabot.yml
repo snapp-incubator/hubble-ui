@@ -23,11 +23,31 @@ updates:
     open-pull-requests-limit: 3
     labels:
       - dependencies
+    ignore:
+      # google-protobuf 4.x breaks the `google-protobuf@^3.14.0` peer dep of
+      # @improbable-eng/grpc-web (archived at 0.15.0, so that range will never
+      # widen) and the `^3.15.5` dep of ts-protoc-gen. Bumping it broke every
+      # `npm ci` on main. Stay on 3.x until the grpc-web client is replaced.
+      - dependency-name: google-protobuf
+        update-types:
+          - version-update:semver-major
     groups:
+      # Majors are deliberately left out of the groups so each one arrives as
+      # its own PR. PR #39 bundled react 18->19, mobx 6->7, react-window 1->2
+      # and google-protobuf 3->4 into a single "prod-deps" PR; merging it broke
+      # install, tests and the image build at once and there was no way to take
+      # the safe half. Grouped minors/patches stay low-noise; majors get
+      # reviewed (and their code migration done) one at a time.
       prod-deps:
         dependency-type: production
+        update-types:
+          - minor
+          - patch
       dev-deps:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: gomod
     directory: /backend
