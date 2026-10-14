@@ -36,7 +36,7 @@ export const hubbleFlowFromLogEntry = (entry: string | object): HubbleFlow | nul
   if (typeof entry === 'string') {
     try {
       obj = JSON.parse(entry);
-    } catch (e) {
+    } catch {
       return null;
     }
   }

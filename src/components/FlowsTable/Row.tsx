@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { ListChildComponentProps, areEqual } from 'react-window';
+import { RowComponentProps } from 'react-window';
 import classnames from 'classnames';
 
 import { Flow } from '~/domain/flows';
@@ -23,8 +23,7 @@ export interface RowRendererData {
   onSelectFlow?: RowProps['onSelect'];
 }
 
-export function RowRenderer({ index, style, data }: ListChildComponentProps) {
-  const props = data as RowRendererData;
+export function RowRenderer({ index, style, ...props }: RowComponentProps<RowRendererData>) {
   const flow = props.flows[index];
   return (
     <Row
@@ -74,4 +73,18 @@ export const Row = memo<RowProps>(function FlowsTableRow(props) {
       )}
     </div>
   );
-}, areEqual);
+}, areRowPropsEqual);
+
+// Shallow prop comparison that compares `style` by value, as the removed
+// react-window v1 `areEqual` helper did.
+function areRowPropsEqual(prev: RowProps, next: RowProps): boolean {
+  const { style: prevStyle, ...prevRest } = prev;
+  const { style: nextStyle, ...nextRest } = next;
+  return shallowEqual(prevStyle ?? {}, nextStyle ?? {}) && shallowEqual(prevRest, nextRest);
+}
+
+function shallowEqual(a: object, b: object): boolean {
+  const aKeys = Object.keys(a) as (keyof typeof a)[];
+  if (aKeys.length !== Object.keys(b).length) return false;
+  return aKeys.every(key => Object.is(a[key], b[key]));
+}

@@ -17,7 +17,7 @@ export const setupHovering = <S extends d3.Selection<any, any, any, any>>(
     })
     .on('mouseout', e => {
       if (housingElement != null) {
-        if (housingElement.contains(e.relatedTarget)) return;
+        if (e.relatedTarget instanceof Node && housingElement.contains(e.relatedTarget)) return;
       }
 
       if (!isMouseOver) return;

@@ -1,6 +1,6 @@
 import useResizeObserver from '@react-hook/resize-observer';
 import React, { useMemo, useRef } from 'react';
-import { FixedSizeList } from 'react-window';
+import { List } from 'react-window';
 
 import { Flow } from '~/domain/flows';
 import { sizes } from '~/ui';
@@ -30,7 +30,7 @@ export const FlowsTable = observer(function FlowsTable(props: Props) {
 
   const scroll = useScroll(props.onFlowsDiffCount);
 
-  const itemData = useMemo((): RowRendererData => {
+  const rowProps = useMemo((): RowRendererData => {
     return {
       flows: props.flows,
       visibleColumns: props.visibleColumns,
@@ -44,29 +44,27 @@ export const FlowsTable = observer(function FlowsTable(props: Props) {
 
   return (
     <div className={css.wrapper} ref={wrapperRef}>
-      <Header visibleColumns={itemData.visibleColumns} />
-      <FixedSizeList
-        {...scroll}
+      <Header visibleColumns={rowProps.visibleColumns} />
+      <List<RowRendererData>
+        listRef={scroll.listRef}
         className={css.table}
-        width={width}
-        height={height - sizes.flowsTableHeadHeight}
-        itemSize={sizes.flowsTableRowHeight}
-        itemCount={props.flows.length}
-        itemKey={itemKey}
-        itemData={itemData}
+        style={{ width, height: height - sizes.flowsTableHeadHeight }}
+        rowHeight={sizes.flowsTableRowHeight}
+        rowCount={props.flows.length}
+        rowKey={rowKey}
+        rowProps={rowProps}
+        rowComponent={RowRenderer}
         overscanCount={Math.ceil(height / sizes.flowsTableRowHeight / 2)}
-      >
-        {RowRenderer}
-      </FixedSizeList>
+      />
     </div>
   );
 });
 
-function itemKey(index: number, data: RowRendererData) {
+function rowKey(index: number, data: RowRendererData) {
   return data.flows[index].id;
 }
 
-const useSize = (target: React.RefObject<HTMLElement>) => {
+const useSize = (target: React.RefObject<HTMLElement | null>) => {
   const [size, setSize] = React.useState<DOMRect | null>(null);
 
   React.useLayoutEffect(() => {

@@ -1,5 +1,3 @@
-import * as mobx from 'mobx';
-
 import { Store } from '~/store';
 import { EventEmitter } from '~/utils/emitter';
 import { BackendAPI } from '~/api/customprotocol';
@@ -69,8 +67,6 @@ export class DataLayer extends EventEmitter<Handlers> {
 
     this.setupEventHandlers();
     this.setupDebugProps();
-
-    mobx.makeObservable(this);
   }
 
   private get commonOpts(): Options {

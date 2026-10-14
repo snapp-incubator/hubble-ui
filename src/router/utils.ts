@@ -8,12 +8,12 @@ export const extractPathname = (urlOrPath: string, pathBase: string = ''): strin
   try {
     const pathname = new URL(safePath, 'http://localhost' + pathBase).pathname;
     return pathname.replace(TRAILING_SLASH_RE, '') || '/';
-  } catch (_e) {}
+  } catch {}
 
   try {
     const pathname = new URL(safePath).pathname;
     return pathname.replace(TRAILING_SLASH_RE, '') || '/';
-  } catch (_e) {}
+  } catch {}
 
   return '/';
 };
