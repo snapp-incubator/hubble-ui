@@ -31,6 +31,12 @@ updates:
       - dependency-name: google-protobuf
         update-types:
           - version-update:semver-major
+      # eslint 10 removed context.getFilename(), which eslint-plugin-react
+      # (pulled in by the lint config) still calls, and typescript-eslint has
+      # not caught up either. Stay on 9.x until both support 10.
+      - dependency-name: eslint
+        update-types:
+          - version-update:semver-major
     groups:
       # Majors are deliberately left out of the groups so each one arrives as
       # its own PR. PR #39 bundled react 18->19, mobx 6->7, react-window 1->2
@@ -62,6 +68,12 @@ updates:
       # alongside that upgrade rather than automatically.
       - dependency-name: github.com/cilium/cilium
       - dependency-name: github.com/cilium/hubble
+      # cilium's k8s client must match these: cilium 1.20 is built against
+      # k8s 0.36 and fails to compile on 0.37 (duplicate Discovery method in
+      # pkg/k8s/client). Move them with the cilium bump, not on their own.
+      - dependency-name: k8s.io/*
+        update-types:
+          - version-update:semver-minor
     groups:
       go-deps:
         patterns:
