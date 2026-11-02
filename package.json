@@ -85,7 +85,7 @@
     "babel-loader": "10.1.1",
     "css-loader": "7.1.5",
     "dotenv-webpack": "9.0.0",
-    "eslint": "9.39.5",
+    "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.7",
     "eslint-plugin-react": "7.37.5",
