@@ -32,7 +32,7 @@ const config: Config = {
         },
       },
     ],
-    '^.+\\.(js|jsx)$': 'babel-jest',
+    '^.+\\.(js|jsx|mjs)$': 'babel-jest',
   },
   transformIgnorePatterns: [],
   setupFilesAfterEnv: ['./scripts/jest.setup.js'],
